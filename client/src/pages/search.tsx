@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,62 +10,18 @@ import RecordForm from "@/components/RecordForm";
 import { Plus, Download, X } from "lucide-react";
 import type { Record } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { ApiClient } from "@/lib/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const governorates = ["القاهرة", "الجيزة", "الإسكندرية", "الدقهلية", "الشرقية", "المنوفية"];
 
-//todo: remove mock functionality
-const mockRecords: Record[] = [
-  {
-    id: '1',
-    inventoryNumber: '2024-001',
-    registrationNumber: 'REG-001',
-    civilRegistrationNumber: 'CIV-001',
-    name: 'أحمد محمد علي',
-    governorate: 'القاهرة',
-    region: 'المعادي',
-    reportType: 'بلاغ عادي',
-    date: new Date('2024-01-15'),
-    notes: 'ملاحظات تجريبية للسجل الأول',
-    additionalNotes: 'ملاحظات إضافية مهمة',
-    createdAt: new Date(),
-  },
-  {
-    id: '2',
-    inventoryNumber: '2024-002',
-    registrationNumber: 'REG-002',
-    civilRegistrationNumber: 'CIV-002',
-    name: 'فاطمة حسن محمود',
-    governorate: 'الجيزة',
-    region: 'الدقي',
-    reportType: 'بلاغ عاجل',
-    date: new Date('2024-02-20'),
-    notes: 'ملاحظات عن البلاغ العاجل',
-    additionalNotes: 'يحتاج متابعة فورية',
-    createdAt: new Date(),
-  },
-  {
-    id: '3',
-    inventoryNumber: '2024-003',
-    registrationNumber: 'REG-003',
-    civilRegistrationNumber: 'CIV-003',
-    name: 'محمود عبد الله',
-    governorate: 'الإسكندرية',
-    region: 'المنتزة',
-    reportType: 'قيد',
-    date: new Date('2024-03-10'),
-    notes: 'قيد جديد للمتابعة',
-    additionalNotes: null,
-    createdAt: new Date(),
-  },
-];
-
 export default function SearchPage() {
-  const [records, setRecords] = useState<Record[]>(mockRecords);
-  const [filteredRecords, setFilteredRecords] = useState<Record[]>(mockRecords);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [filteredRecords, setFilteredRecords] = useState<Record[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<Record | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const { toast } = useToast();
 
   const [filters, setFilters] = useState({
     inventoryNumber: "",
@@ -76,6 +32,36 @@ export default function SearchPage() {
     startDate: "",
     endDate: "",
     notes: "",
+  });
+
+  const { data: records = [], isLoading } = useQuery<Record[]>({
+    queryKey: ["/api/records"],
+  });
+
+  useEffect(() => {
+    setFilteredRecords(records);
+  }, [records]);
+
+  const createMutation = useMutation({
+    mutationFn: (data: any) => ApiClient.post<Record>("/api/records", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/records"] });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      ApiClient.put<Record>(`/api/records/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/records"] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => ApiClient.delete(`/api/records/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/records"] });
+    },
   });
 
   const handleSearch = () => {
@@ -126,43 +112,49 @@ export default function SearchPage() {
     setDeleteId(id);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteId) {
-      setRecords(records.filter((r) => r.id !== deleteId));
-      setFilteredRecords(filteredRecords.filter((r) => r.id !== deleteId));
-      toast({
-        title: "تم الحذف",
-        description: "تم حذف السجل بنجاح",
-      });
-      setDeleteId(null);
+      try {
+        await deleteMutation.mutateAsync(deleteId);
+        toast({
+          title: "تم الحذف",
+          description: "تم حذف السجل بنجاح",
+        });
+      } catch (error: any) {
+        toast({
+          title: "خطأ",
+          description: error.message || "حدث خطأ أثناء حذف السجل",
+          variant: "destructive",
+        });
+      } finally {
+        setDeleteId(null);
+      }
     }
   };
 
-  const handleSubmit = (data: any) => {
-    if (editingRecord) {
-      const updated = records.map((r) =>
-        r.id === editingRecord.id ? { ...r, ...data } : r
-      );
-      setRecords(updated);
-      setFilteredRecords(updated);
+  const handleSubmit = async (data: any) => {
+    try {
+      if (editingRecord) {
+        await updateMutation.mutateAsync({ id: editingRecord.id, data });
+        toast({
+          title: "تم التعديل",
+          description: "تم تعديل السجل بنجاح",
+        });
+      } else {
+        await createMutation.mutateAsync(data);
+        toast({
+          title: "تم الحفظ",
+          description: "تم إضافة السجل بنجاح",
+        });
+      }
+      setIsFormOpen(false);
+    } catch (error: any) {
       toast({
-        title: "تم التعديل",
-        description: "تم تعديل السجل بنجاح",
-      });
-    } else {
-      const newRecord: Record = {
-        id: String(Date.now()),
-        ...data,
-        createdAt: new Date(),
-      };
-      setRecords([...records, newRecord]);
-      setFilteredRecords([...records, newRecord]);
-      toast({
-        title: "تم الحفظ",
-        description: "تم إضافة السجل بنجاح",
+        title: "خطأ",
+        description: error.message || "حدث خطأ",
+        variant: "destructive",
       });
     }
-    setIsFormOpen(false);
   };
 
   const handleExport = () => {

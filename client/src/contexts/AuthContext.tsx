@@ -1,0 +1,86 @@
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { ApiClient } from "@/lib/api";
+import { useLocation } from "wouter";
+
+interface User {
+  id: string;
+  username: string;
+  displayName: string;
+}
+
+interface AuthContextType {
+  user: User | null;
+  isLoading: boolean;
+  login: (username: string, password: string) => Promise<void>;
+  register: (username: string, password: string, displayName: string) => Promise<void>;
+  logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await ApiClient.get<{ user: User }>("/api/auth/me");
+      setUser(response.user);
+    } catch (error) {
+      localStorage.removeItem("auth_token");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const login = async (username: string, password: string) => {
+    const response = await ApiClient.post<{ user: User; token: string }>(
+      "/api/auth/login",
+      { username, password }
+    );
+    localStorage.setItem("auth_token", response.token);
+    setUser(response.user);
+    setLocation("/");
+  };
+
+  const register = async (username: string, password: string, displayName: string) => {
+    const response = await ApiClient.post<{ user: User; token: string }>(
+      "/api/auth/register",
+      { username, password, displayName }
+    );
+    localStorage.setItem("auth_token", response.token);
+    setUser(response.user);
+    setLocation("/");
+  };
+
+  const logout = () => {
+    localStorage.removeItem("auth_token");
+    setUser(null);
+    setLocation("/login");
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+}

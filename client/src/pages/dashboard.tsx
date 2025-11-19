@@ -1,4 +1,4 @@
-import { FileText, Search, Users, FileCheck, Database, LogOut } from "lucide-react";
+import { FileText, Search, Users, FileCheck, Database } from "lucide-react";
 import ModuleCard from "@/components/ModuleCard";
 import { useLocation } from "wouter";
 
@@ -24,12 +24,6 @@ export default function Dashboard() {
             onClick={() => setLocation(module.path)}
           />
         ))}
-        <ModuleCard
-          title="خروج"
-          icon={LogOut}
-          variant="danger"
-          onClick={() => console.log("Logout clicked")}
-        />
       </div>
     </div>
   );
