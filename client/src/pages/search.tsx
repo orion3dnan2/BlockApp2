@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, ArrowRight } from "lucide-react";
 import DataTable from "@/components/DataTable";
 import RecordForm from "@/components/RecordForm";
 import type { Record } from "@shared/schema";
@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ApiClient } from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Link } from "wouter";
 
 export default function SearchPage() {
   const queryClient = useQueryClient();
@@ -32,6 +33,7 @@ export default function SearchPage() {
     const filtered = records.filter((record) => {
       const fullName = `${record.firstName} ${record.secondName} ${record.thirdName} ${record.fourthName}`.toLowerCase();
       return (
+        String(record.recordNumber).includes(query) ||
         fullName.includes(query) ||
         record.outgoingNumber.toLowerCase().includes(query) ||
         record.militaryNumber.toLowerCase().includes(query)
@@ -88,6 +90,7 @@ export default function SearchPage() {
     const filtered = records.filter((record) => {
       const fullName = `${record.firstName} ${record.secondName} ${record.thirdName} ${record.fourthName}`.toLowerCase();
       return (
+        String(record.recordNumber).includes(query) ||
         fullName.includes(query) ||
         record.outgoingNumber.toLowerCase().includes(query) ||
         record.militaryNumber.toLowerCase().includes(query)
@@ -148,6 +151,14 @@ export default function SearchPage() {
   return (
     <div className="min-h-screen bg-gray-100 p-6" dir="rtl">
       <div className="mx-auto max-w-7xl space-y-6">
+        {/* Back Button */}
+        <Link href="/">
+          <Button variant="outline" className="gap-2" data-testid="button-back-to-dashboard">
+            <ArrowRight className="h-4 w-4" />
+            العودة للصفحة الرئيسية
+          </Button>
+        </Link>
+
         {/* Data Entry Form */}
         <div className="rounded-lg bg-white p-6 shadow">
           <h2 className="mb-4 text-xl font-bold" data-testid="heading-form-title">
@@ -167,7 +178,7 @@ export default function SearchPage() {
               <div className="relative">
                 <Search className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
                 <Input
-                  placeholder="بحث سريع: الاسم، رقم الصادر، أو الرقم العسكري..."
+                  placeholder="بحث سريع: رقم السجل، الاسم، رقم الصادر، أو الرقم العسكري..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pr-10"

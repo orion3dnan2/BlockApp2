@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, serial } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -12,6 +12,7 @@ export const users = pgTable("users", {
 
 export const records = pgTable("records", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  recordNumber: serial("record_number").notNull().unique(),
   outgoingNumber: text("outgoing_number").notNull(),
   militaryNumber: text("military_number").notNull(),
   recordedNotes: text("recorded_notes"),
@@ -35,6 +36,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export const insertRecordSchema = createInsertSchema(records).omit({
   id: true,
+  recordNumber: true,
   createdAt: true,
 });
 

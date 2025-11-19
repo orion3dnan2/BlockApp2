@@ -33,7 +33,7 @@ export default function DataTable({ records, onEdit, onDelete }: DataTableProps)
   };
 
   const dateFields: SortField[] = ["tourDate", "createdAt"];
-  const numericFields: SortField[] = ["outgoingNumber", "militaryNumber"];
+  const numericFields: SortField[] = ["recordNumber", "outgoingNumber", "militaryNumber"];
 
   const sortedRecords = [...records].sort((a, b) => {
     if (!sortField) return 0;
@@ -93,6 +93,13 @@ export default function DataTable({ records, onEdit, onDelete }: DataTableProps)
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50">
+            <TableHead 
+              className="text-right cursor-pointer" 
+              onClick={() => handleSort("recordNumber")}
+              data-testid="header-record-number"
+            >
+              رقم السجل <SortIcon field="recordNumber" />
+            </TableHead>
             <TableHead 
               className="text-right cursor-pointer" 
               onClick={() => handleSort("outgoingNumber")}
@@ -160,13 +167,16 @@ export default function DataTable({ records, onEdit, onDelete }: DataTableProps)
         <TableBody>
           {sortedRecords.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={10} className="h-24 text-center" data-testid="text-no-records">
+              <TableCell colSpan={11} className="h-24 text-center" data-testid="text-no-records">
                 لا توجد سجلات
               </TableCell>
             </TableRow>
           ) : (
             sortedRecords.map((record, index) => (
               <TableRow key={record.id} data-testid={`row-record-${index}`}>
+                <TableCell className="font-bold text-primary" data-testid={`cell-record-number-${index}`}>
+                  {record.recordNumber}
+                </TableCell>
                 <TableCell className="font-medium" data-testid={`cell-outgoing-${index}`}>
                   {record.outgoingNumber}
                 </TableCell>
