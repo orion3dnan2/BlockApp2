@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import { Edit, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import type { Record } from "@shared/schema";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
-import type { Record } from "@shared/schema";
 
 interface DataTableProps {
   records: Record[];
-  onEdit?: (record: Record) => void;
-  onDelete?: (id: string) => void;
+  onEdit: (record: Record) => void;
+  onDelete: (id: string) => void;
 }
 
 type SortField = keyof Record | null;
@@ -18,6 +18,10 @@ type SortDirection = "asc" | "desc";
 export default function DataTable({ records, onEdit, onDelete }: DataTableProps) {
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+
+  const getFullName = (record: Record) => {
+    return `${record.firstName} ${record.secondName} ${record.thirdName} ${record.fourthName}`;
+  };
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -28,18 +32,41 @@ export default function DataTable({ records, onEdit, onDelete }: DataTableProps)
     }
   };
 
+  const dateFields: SortField[] = ["tourDate", "createdAt"];
+  const numericFields: SortField[] = ["outgoingNumber", "militaryNumber"];
+
   const sortedRecords = [...records].sort((a, b) => {
     if (!sortField) return 0;
     
-    const aValue = a[sortField];
-    const bValue = b[sortField];
+    let aValue = a[sortField];
+    let bValue = b[sortField];
     
     if (aValue === null || aValue === undefined) return 1;
     if (bValue === null || bValue === undefined) return -1;
     
-    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
-    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
-    return 0;
+    // Handle date fields ONLY if the field is actually a date field
+    if (dateFields.includes(sortField)) {
+      const aTime = new Date(aValue as any).getTime();
+      const bTime = new Date(bValue as any).getTime();
+      if (isNaN(aTime)) return 1;
+      if (isNaN(bTime)) return -1;
+      return sortDirection === "asc" ? aTime - bTime : bTime - aTime;
+    }
+    
+    // Handle numeric fields ONLY if the field is actually a numeric field
+    if (numericFields.includes(sortField)) {
+      const aNum = parseFloat(String(aValue).replace(/[^\d.-]/g, ""));
+      const bNum = parseFloat(String(bValue).replace(/[^\d.-]/g, ""));
+      if (!isNaN(aNum) && !isNaN(bNum)) {
+        return sortDirection === "asc" ? aNum - bNum : bNum - aNum;
+      }
+    }
+    
+    // Default string comparison with Arabic locale for all other fields
+    const aStr = String(aValue).toLowerCase();
+    const bStr = String(bValue).toLowerCase();
+    const comparison = aStr.localeCompare(bStr, "ar");
+    return sortDirection === "asc" ? comparison : -comparison;
   });
 
   const SortIcon = ({ field }: { field: SortField }) => {
@@ -51,87 +78,147 @@ export default function DataTable({ records, onEdit, onDelete }: DataTableProps)
     );
   };
 
+  const formatDate = (dateValue: any): string => {
+    if (!dateValue) return "-";
+    try {
+      const date = new Date(dateValue);
+      return !isNaN(date.getTime()) ? format(date, "dd/MM/yyyy", { locale: ar }) : "-";
+    } catch {
+      return "-";
+    }
+  };
+
   return (
-    <div className="rounded-md border" dir="rtl">
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-muted/50">
+            <TableHead 
+              className="text-right cursor-pointer" 
+              onClick={() => handleSort("outgoingNumber")}
+              data-testid="header-outgoing-number"
+            >
+              رقم الصادر <SortIcon field="outgoingNumber" />
+            </TableHead>
+            <TableHead 
+              className="text-right cursor-pointer" 
+              onClick={() => handleSort("firstName")}
+              data-testid="header-name"
+            >
+              الاسم <SortIcon field="firstName" />
+            </TableHead>
+            <TableHead 
+              className="text-right cursor-pointer" 
+              onClick={() => handleSort("militaryNumber")}
+              data-testid="header-military-number"
+            >
+              الرقم العسكري <SortIcon field="militaryNumber" />
+            </TableHead>
+            <TableHead 
+              className="text-right cursor-pointer" 
+              onClick={() => handleSort("governorate")}
+              data-testid="header-governorate"
+            >
+              المحافظة <SortIcon field="governorate" />
+            </TableHead>
+            <TableHead 
+              className="text-right cursor-pointer" 
+              onClick={() => handleSort("office")}
+              data-testid="header-office"
+            >
+              المكتب <SortIcon field="office" />
+            </TableHead>
+            <TableHead 
+              className="text-right cursor-pointer" 
+              onClick={() => handleSort("policeStation")}
+              data-testid="header-police-station"
+            >
+              المخفر <SortIcon field="policeStation" />
+            </TableHead>
+            <TableHead 
+              className="text-right cursor-pointer" 
+              onClick={() => handleSort("rank")}
+              data-testid="header-rank"
+            >
+              الرتبة <SortIcon field="rank" />
+            </TableHead>
+            <TableHead 
+              className="text-right cursor-pointer" 
+              onClick={() => handleSort("tourDate")}
+              data-testid="header-tour-date"
+            >
+              تاريخ الجولة <SortIcon field="tourDate" />
+            </TableHead>
+            <TableHead className="text-right" data-testid="header-notes">
+              الملاحظات المدونة
+            </TableHead>
+            <TableHead className="text-center" data-testid="header-actions">
+              الإجراءات
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {sortedRecords.length === 0 ? (
             <TableRow>
-              <TableHead className="text-right cursor-pointer" onClick={() => handleSort("inventoryNumber")}>
-                رقم الحصر <SortIcon field="inventoryNumber" />
-              </TableHead>
-              <TableHead className="text-right cursor-pointer" onClick={() => handleSort("name")}>
-                الاسم <SortIcon field="name" />
-              </TableHead>
-              <TableHead className="text-right cursor-pointer" onClick={() => handleSort("region")}>
-                المنطقة <SortIcon field="region" />
-              </TableHead>
-              <TableHead className="text-right cursor-pointer" onClick={() => handleSort("governorate")}>
-                المحافظة <SortIcon field="governorate" />
-              </TableHead>
-              <TableHead className="text-right cursor-pointer" onClick={() => handleSort("date")}>
-                التاريخ <SortIcon field="date" />
-              </TableHead>
-              <TableHead className="text-right cursor-pointer" onClick={() => handleSort("registrationNumber")}>
-                رقم السجل <SortIcon field="registrationNumber" />
-              </TableHead>
-              <TableHead className="text-right cursor-pointer" onClick={() => handleSort("reportType")}>
-                نوع البلاغ <SortIcon field="reportType" />
-              </TableHead>
-              <TableHead className="text-right">ملاحظات</TableHead>
-              <TableHead className="text-right">إجراءات</TableHead>
+              <TableCell colSpan={10} className="h-24 text-center" data-testid="text-no-records">
+                لا توجد سجلات
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedRecords.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
-                  لا توجد بيانات
+          ) : (
+            sortedRecords.map((record, index) => (
+              <TableRow key={record.id} data-testid={`row-record-${index}`}>
+                <TableCell className="font-medium" data-testid={`cell-outgoing-${index}`}>
+                  {record.outgoingNumber}
+                </TableCell>
+                <TableCell data-testid={`cell-name-${index}`}>
+                  {getFullName(record)}
+                </TableCell>
+                <TableCell data-testid={`cell-military-${index}`}>
+                  {record.militaryNumber}
+                </TableCell>
+                <TableCell data-testid={`cell-governorate-${index}`}>
+                  {record.governorate}
+                </TableCell>
+                <TableCell data-testid={`cell-office-${index}`}>
+                  {record.office}
+                </TableCell>
+                <TableCell data-testid={`cell-police-station-${index}`}>
+                  {record.policeStation}
+                </TableCell>
+                <TableCell data-testid={`cell-rank-${index}`}>
+                  {record.rank}
+                </TableCell>
+                <TableCell data-testid={`cell-tour-date-${index}`}>
+                  {formatDate(record.tourDate)}
+                </TableCell>
+                <TableCell className="max-w-xs truncate" data-testid={`cell-notes-${index}`}>
+                  {record.recordedNotes || "-"}
+                </TableCell>
+                <TableCell className="text-center">
+                  <div className="flex justify-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onEdit(record)}
+                      data-testid={`button-edit-${index}`}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDelete(record.id)}
+                      data-testid={`button-delete-${index}`}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
-            ) : (
-              sortedRecords.map((record) => (
-                <TableRow key={record.id} data-testid={`row-record-${record.id}`}>
-                  <TableCell className="text-right">{record.inventoryNumber}</TableCell>
-                  <TableCell className="text-right">{record.name}</TableCell>
-                  <TableCell className="text-right">{record.region}</TableCell>
-                  <TableCell className="text-right">{record.governorate}</TableCell>
-                  <TableCell className="text-right">
-                    {format(new Date(record.date), "dd/MM/yyyy", { locale: ar })}
-                  </TableCell>
-                  <TableCell className="text-right">{record.registrationNumber}</TableCell>
-                  <TableCell className="text-right">{record.reportType}</TableCell>
-                  <TableCell className="text-right">
-                    <span className="line-clamp-1" title={record.notes || ""}>
-                      {record.notes}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onEdit?.(record)}
-                        data-testid={`button-edit-${record.id}`}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDelete?.(record.id)}
-                        data-testid={`button-delete-${record.id}`}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+            ))
+          )}
+        </TableBody>
+      </Table>
     </div>
   );
 }

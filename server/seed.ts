@@ -27,71 +27,61 @@ async function seed() {
       },
     ];
 
-    console.log("Creating test users...");
-    const createdUsers = await db.insert(users).values(testUsers).returning();
-    console.log(`✓ Created ${createdUsers.length} test users`);
+    try {
+      console.log("Creating test users...");
+      const createdUsers = await db.insert(users).values(testUsers).returning();
+      console.log(`✓ Created ${createdUsers.length} test users`);
+    } catch (error: any) {
+      if (error.code === '23505') {
+        console.log("✓ Test users already exist, skipping...");
+      } else {
+        throw error;
+      }
+    }
 
     // Create sample records
     const sampleRecords = [
       {
-        inventoryNumber: "2024-001",
-        registrationNumber: "REG-2024-001",
-        civilRegistrationNumber: "CIV-20240001",
-        name: "أحمد محمد علي",
-        governorate: "القاهرة",
-        region: "المعادي",
-        reportType: "بلاغ عادي",
-        date: new Date("2024-01-15"),
-        notes: "بلاغ عن مخالفة بناء",
-        additionalNotes: "تم إرسال تنبيه للجهات المختصة",
+        outgoingNumber: "2024-001",
+        militaryNumber: "MIL-20240001",
+        recordedNotes: "زيارة تفتيشية للمنطقة",
+        firstName: "أحمد",
+        secondName: "محمد",
+        thirdName: "علي",
+        fourthName: "السالم",
+        tourDate: new Date("2024-01-15"),
+        rank: "نقيب",
+        governorate: "الجهراء",
+        office: "الإدارة العامة",
+        policeStation: "مخفر الجهراء",
       },
       {
-        inventoryNumber: "2024-002",
-        registrationNumber: "REG-2024-002",
-        civilRegistrationNumber: "CIV-20240002",
-        name: "فاطمة حسن محمود",
-        governorate: "الجيزة",
-        region: "الدقي",
-        reportType: "بلاغ عاجل",
-        date: new Date("2024-02-20"),
-        notes: "بلاغ عن حريق",
-        additionalNotes: "تم التعامل مع البلاغ فوراً",
+        outgoingNumber: "2024-002",
+        militaryNumber: "MIL-20240002",
+        recordedNotes: "متابعة تقرير سابق",
+        firstName: "فاطمة",
+        secondName: "حسن",
+        thirdName: "محمود",
+        fourthName: "الخالد",
+        tourDate: new Date("2024-02-20"),
+        rank: "ملازم",
+        governorate: "الأحمدي",
+        office: "إدارة المباحث",
+        policeStation: "مخفر الأحمدي",
       },
       {
-        inventoryNumber: "2024-003",
-        registrationNumber: "REG-2024-003",
-        civilRegistrationNumber: "CIV-20240003",
-        name: "محمود عبد الله حسين",
-        governorate: "الإسكندرية",
-        region: "المنتزة",
-        reportType: "قيد",
-        date: new Date("2024-03-10"),
-        notes: "قيد جديد للمتابعة",
-        additionalNotes: null,
-      },
-      {
-        inventoryNumber: "2024-004",
-        registrationNumber: "REG-2024-004",
-        civilRegistrationNumber: "CIV-20240004",
-        name: "سارة أحمد سالم",
-        governorate: "الشرقية",
-        region: "الزقازيق",
-        reportType: "بلاغ عادي",
-        date: new Date("2024-03-25"),
-        notes: "بلاغ عن تعدي على أرض زراعية",
-        additionalNotes: "في انتظار المعاينة",
-      },
-      {
-        inventoryNumber: "2024-005",
-        registrationNumber: "REG-2024-005",
-        civilRegistrationNumber: "CIV-20240005",
-        name: "خالد محمد إبراهيم",
-        governorate: "الدقهلية",
-        region: "المنصورة",
-        reportType: "بلاغ سري",
-        date: new Date("2024-04-05"),
-        notes: "بلاغ سري - معلومات حساسة",
-        additionalNotes: "تحت التحقيق",
+        outgoingNumber: "2024-003",
+        militaryNumber: "MIL-20240003",
+        recordedNotes: null,
+        firstName: "محمود",
+        secondName: "عبد الله",
+        thirdName: "حسين",
+        fourthName: "المطيري",
+        tourDate: new Date("2024-03-10"),
+        rank: "رقيب",
+        governorate: "الفروانية",
+        office: "الإدارة العامة",
+        policeStation: "مخفر الفروانية",
       },
     ];
 
@@ -105,14 +95,6 @@ async function seed() {
     console.log("Username: admin");
     console.log("Password: 123456");
     console.log("Display Name: المدير العام");
-    console.log("──────────────────────────────────────");
-    console.log("Username: user1");
-    console.log("Password: 123456");
-    console.log("Display Name: مستخدم تجريبي 1");
-    console.log("──────────────────────────────────────");
-    console.log("Username: user2");
-    console.log("Password: 123456");
-    console.log("Display Name: مستخدم تجريبي 2");
     console.log("══════════════════════════════════════\n");
 
   } catch (error: any) {

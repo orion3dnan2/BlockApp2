@@ -1,52 +1,55 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Search } from "lucide-react";
 import DataTable from "@/components/DataTable";
 import RecordForm from "@/components/RecordForm";
-import { Plus, Download, X } from "lucide-react";
 import type { Record } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { ApiClient } from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-
-const governorates = ["القاهرة", "الجيزة", "الإسكندرية", "الدقهلية", "الشرقية", "المنوفية"];
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export default function SearchPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [filteredRecords, setFilteredRecords] = useState<Record[]>([]);
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [editingRecord, setEditingRecord] = useState<Record | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-
-  const [filters, setFilters] = useState({
-    inventoryNumber: "",
-    registrationNumber: "",
-    name: "",
-    governorate: "",
-    region: "",
-    startDate: "",
-    endDate: "",
-    notes: "",
-  });
 
   const { data: records = [], isLoading } = useQuery<Record[]>({
     queryKey: ["/api/records"],
   });
 
   useEffect(() => {
-    setFilteredRecords(records);
-  }, [records]);
+    if (!searchQuery.trim()) {
+      setFilteredRecords(records);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const filtered = records.filter((record) => {
+      const fullName = `${record.firstName} ${record.secondName} ${record.thirdName} ${record.fourthName}`.toLowerCase();
+      return (
+        fullName.includes(query) ||
+        record.outgoingNumber.toLowerCase().includes(query) ||
+        record.militaryNumber.toLowerCase().includes(query)
+      );
+    });
+
+    setFilteredRecords(filtered);
+  }, [records, searchQuery]);
 
   const createMutation = useMutation({
     mutationFn: (data: any) => ApiClient.post<Record>("/api/records", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/records"] });
+      toast({
+        title: "تم الحفظ",
+        description: "تم إضافة السجل بنجاح",
+      });
+      setEditingRecord(null);
     },
   });
 
@@ -55,6 +58,11 @@ export default function SearchPage() {
       ApiClient.put<Record>(`/api/records/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/records"] });
+      toast({
+        title: "تم التحديث",
+        description: "تم تحديث السجل بنجاح",
+      });
+      setEditingRecord(null);
     },
   });
 
@@ -62,51 +70,53 @@ export default function SearchPage() {
     mutationFn: (id: string) => ApiClient.delete(`/api/records/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/records"] });
+      toast({
+        title: "تم الحذف",
+        description: "تم حذف السجل بنجاح",
+      });
+      setDeleteId(null);
     },
   });
 
   const handleSearch = () => {
-    let filtered = records;
+    if (!searchQuery.trim()) {
+      setFilteredRecords(records);
+      return;
+    }
 
-    if (filters.inventoryNumber) {
-      filtered = filtered.filter((r) =>
-        r.inventoryNumber.toLowerCase().includes(filters.inventoryNumber.toLowerCase())
+    const query = searchQuery.toLowerCase();
+    const filtered = records.filter((record) => {
+      const fullName = `${record.firstName} ${record.secondName} ${record.thirdName} ${record.fourthName}`.toLowerCase();
+      return (
+        fullName.includes(query) ||
+        record.outgoingNumber.toLowerCase().includes(query) ||
+        record.militaryNumber.toLowerCase().includes(query)
       );
-    }
-    if (filters.registrationNumber) {
-      filtered = filtered.filter((r) =>
-        r.registrationNumber.toLowerCase().includes(filters.registrationNumber.toLowerCase())
-      );
-    }
-    if (filters.name) {
-      filtered = filtered.filter((r) =>
-        r.name.toLowerCase().includes(filters.name.toLowerCase())
-      );
-    }
-    if (filters.governorate) {
-      filtered = filtered.filter((r) => r.governorate === filters.governorate);
-    }
-    if (filters.region) {
-      filtered = filtered.filter((r) =>
-        r.region.toLowerCase().includes(filters.region.toLowerCase())
-      );
-    }
+    });
 
     setFilteredRecords(filtered);
-    toast({
-      title: "تم البحث",
-      description: `تم العثور على ${filtered.length} سجل`,
-    });
   };
 
-  const handleNew = () => {
-    setEditingRecord(null);
-    setIsFormOpen(true);
+  const handleSubmit = async (data: any) => {
+    try {
+      if (editingRecord) {
+        await updateMutation.mutateAsync({ id: editingRecord.id, data });
+      } else {
+        await createMutation.mutateAsync(data);
+      }
+    } catch (error: any) {
+      toast({
+        title: "خطأ",
+        description: error.message || "حدث خطأ أثناء الحفظ",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEdit = (record: Record) => {
     setEditingRecord(record);
-    setIsFormOpen(true);
+    // Scroll to top to see the form
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleDelete = (id: string) => {
@@ -117,239 +127,92 @@ export default function SearchPage() {
     if (deleteId) {
       try {
         await deleteMutation.mutateAsync(deleteId);
-        toast({
-          title: "تم الحذف",
-          description: "تم حذف السجل بنجاح",
-        });
       } catch (error: any) {
         toast({
           title: "خطأ",
-          description: error.message || "حدث خطأ أثناء حذف السجل",
+          description: error.message || "حدث خطأ أثناء الحذف",
           variant: "destructive",
         });
-      } finally {
-        setDeleteId(null);
       }
     }
   };
 
-  const handleSubmit = async (data: any) => {
-    try {
-      if (editingRecord) {
-        await updateMutation.mutateAsync({ id: editingRecord.id, data });
-        toast({
-          title: "تم التعديل",
-          description: "تم تعديل السجل بنجاح",
-        });
-      } else {
-        await createMutation.mutateAsync(data);
-        toast({
-          title: "تم الحفظ",
-          description: "تم إضافة السجل بنجاح",
-        });
-      }
-      setIsFormOpen(false);
-    } catch (error: any) {
-      toast({
-        title: "خطأ",
-        description: error.message || "حدث خطأ",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleExport = () => {
-    toast({
-      title: "تصدير البيانات",
-      description: "سيتم تصدير البيانات قريباً",
-    });
-  };
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p>جاري التحميل...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20" dir="rtl">
-      <div className="container mx-auto max-w-7xl space-y-6 px-6 py-8">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex-1">
-            <h2 className="text-3xl font-bold tracking-tight">الاستعلام</h2>
-            <p className="text-muted-foreground">البحث وإدارة السجلات</p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Button onClick={handleExport} variant="outline" data-testid="button-export">
-              <Download className="ml-2 h-4 w-4" />
-              تصدير
-            </Button>
-            <Button onClick={handleNew} size="lg" data-testid="button-new-record">
-              <Plus className="ml-2 h-5 w-5" />
-              سجل جديد
-            </Button>
-          </div>
-        </div>
-
-      <Card className="border-0 shadow-lg overflow-visible">
-        <CardHeader>
-          <CardTitle className="text-lg">خيارات البحث والتصفية</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <div className="space-y-2">
-            <Label>رقم الحصر</Label>
-            <div className="flex gap-2">
-              <Input
-                value={filters.inventoryNumber}
-                onChange={(e) => setFilters({ ...filters, inventoryNumber: e.target.value })}
-                data-testid="input-filter-inventory"
-              />
-              <Button size="sm" onClick={handleSearch} data-testid="button-search-inventory">
-                بحث
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>رقم السجل</Label>
-            <div className="flex gap-2">
-              <Input
-                value={filters.registrationNumber}
-                onChange={(e) => setFilters({ ...filters, registrationNumber: e.target.value })}
-                data-testid="input-filter-registration"
-              />
-              <Button size="sm" onClick={handleSearch} data-testid="button-search-registration">
-                بحث
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>الاسم</Label>
-            <div className="flex gap-2">
-              <Input
-                value={filters.name}
-                onChange={(e) => setFilters({ ...filters, name: e.target.value })}
-                data-testid="input-filter-name"
-              />
-              <Button size="sm" onClick={handleSearch} data-testid="button-search-name">
-                بحث
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>المحافظة</Label>
-            <Select
-              value={filters.governorate}
-              onValueChange={(value) => setFilters({ ...filters, governorate: value })}
-            >
-              <SelectTrigger data-testid="select-filter-governorate">
-                <SelectValue placeholder="اختر المحافظة" />
-              </SelectTrigger>
-              <SelectContent>
-                {governorates.map((gov) => (
-                  <SelectItem key={gov} value={gov}>
-                    {gov}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>المنطقة</Label>
-            <Input
-              value={filters.region}
-              onChange={(e) => setFilters({ ...filters, region: e.target.value })}
-              data-testid="input-filter-region"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>تاريخ البداية</Label>
-            <Input
-              type="date"
-              value={filters.startDate}
-              onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-              data-testid="input-filter-start-date"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>تاريخ النهاية</Label>
-            <Input
-              type="date"
-              value={filters.endDate}
-              onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-              data-testid="input-filter-end-date"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>ملاحظات</Label>
-            <Input
-              value={filters.notes}
-              onChange={(e) => setFilters({ ...filters, notes: e.target.value })}
-              data-testid="input-filter-notes"
-            />
-          </div>
-        </div>
-
-          <div className="mt-4 flex gap-3">
-            <Button onClick={handleSearch} size="lg" data-testid="button-search-all">
-              بحث شامل
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setFilters({
-                  inventoryNumber: "",
-                  registrationNumber: "",
-                  name: "",
-                  governorate: "",
-                  region: "",
-                  startDate: "",
-                  endDate: "",
-                  notes: "",
-                });
-                setFilteredRecords(records);
-              }}
-              data-testid="button-clear-filters"
-            >
-              <X className="ml-2 h-4 w-4" />
-              مسح الفلاتر
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-0 shadow-lg overflow-visible">
-        <CardContent className="p-0">
-          <DataTable records={filteredRecords} onEdit={handleEdit} onDelete={handleDelete} />
-        </CardContent>
-      </Card>
-    </div>
-
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" dir="rtl">
-          <DialogHeader>
-            <DialogTitle>{editingRecord ? "تعديل السجل" : "سجل جديد"}</DialogTitle>
-          </DialogHeader>
+    <div className="min-h-screen bg-gray-100 p-6" dir="rtl">
+      <div className="mx-auto max-w-7xl space-y-6">
+        {/* Data Entry Form */}
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h2 className="mb-4 text-xl font-bold" data-testid="heading-form-title">
+            {editingRecord ? "تعديل السجل" : "إدخال البيانات"}
+          </h2>
           <RecordForm
-            defaultValues={editingRecord || undefined}
+            record={editingRecord || undefined}
             onSubmit={handleSubmit}
-            onCancel={() => setIsFormOpen(false)}
+            onCancel={() => setEditingRecord(null)}
           />
-        </DialogContent>
-      </Dialog>
+        </div>
 
+        {/* Quick Search Bar */}
+        <div className="rounded-lg bg-white p-4 shadow">
+          <div className="flex items-center gap-3">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                <Input
+                  placeholder="بحث سريع: الاسم، رقم الصادر، أو الرقم العسكري..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pr-10"
+                  data-testid="input-quick-search"
+                />
+              </div>
+            </div>
+            <Button
+              onClick={handleSearch}
+              className="bg-blue-600 hover:bg-blue-700"
+              data-testid="button-search"
+            >
+              بحث
+            </Button>
+          </div>
+          {searchQuery && (
+            <p className="mt-2 text-sm text-muted-foreground" data-testid="text-search-results-count">
+              عدد النتائج: {filteredRecords.length}
+            </p>
+          )}
+        </div>
+
+        {/* Data Table */}
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h3 className="mb-4 text-lg font-semibold" data-testid="heading-records">السجلات</h3>
+          <DataTable
+            records={filteredRecords}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        </div>
+      </div>
+
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir="rtl" data-testid="dialog-delete-confirmation">
           <AlertDialogHeader>
-            <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
-            <AlertDialogDescription>
-              سيتم حذف هذا السجل نهائياً ولا يمكن التراجع عن هذا الإجراء.
+            <AlertDialogTitle data-testid="text-delete-dialog-title">تأكيد الحذف</AlertDialogTitle>
+            <AlertDialogDescription data-testid="text-delete-dialog-description">
+              هل أنت متأكد من حذف هذا السجل؟ لا يمكن التراجع عن هذا الإجراء.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-delete">إلغاء</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} data-testid="button-confirm-delete">
+            <AlertDialogCancel data-testid="button-cancel-delete-dialog">إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} data-testid="button-confirm-delete-dialog">
               حذف
             </AlertDialogAction>
           </AlertDialogFooter>

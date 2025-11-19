@@ -12,16 +12,18 @@ export const users = pgTable("users", {
 
 export const records = pgTable("records", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  inventoryNumber: text("inventory_number").notNull(),
-  registrationNumber: text("registration_number").notNull(),
-  civilRegistrationNumber: text("civil_registration_number").notNull(),
-  name: text("name").notNull(),
+  outgoingNumber: text("outgoing_number").notNull(),
+  militaryNumber: text("military_number").notNull(),
+  recordedNotes: text("recorded_notes"),
+  firstName: text("first_name").notNull(),
+  secondName: text("second_name").notNull(),
+  thirdName: text("third_name").notNull(),
+  fourthName: text("fourth_name").notNull(),
+  tourDate: timestamp("tour_date").notNull(),
+  rank: text("rank").notNull(),
   governorate: text("governorate").notNull(),
-  region: text("region").notNull(),
-  reportType: text("report_type").notNull(),
-  date: timestamp("date").notNull(),
-  notes: text("notes"),
-  additionalNotes: text("additional_notes"),
+  office: text("office").notNull(),
+  policeStation: text("police_station").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
