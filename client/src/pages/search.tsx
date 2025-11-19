@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -165,23 +166,31 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="container mx-auto max-w-7xl space-y-6 px-6 py-8" dir="rtl">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">الاستعلام</h2>
-        <div className="flex gap-3">
-          <Button onClick={handleExport} variant="outline" data-testid="button-export">
-            <Download className="ml-2 h-4 w-4" />
-            تصدير
-          </Button>
-          <Button onClick={handleNew} data-testid="button-new-record">
-            <Plus className="ml-2 h-4 w-4" />
-            جديد
-          </Button>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20" dir="rtl">
+      <div className="container mx-auto max-w-7xl space-y-6 px-6 py-8">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <h2 className="text-3xl font-bold tracking-tight">الاستعلام</h2>
+            <p className="text-muted-foreground">البحث وإدارة السجلات</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button onClick={handleExport} variant="outline" data-testid="button-export">
+              <Download className="ml-2 h-4 w-4" />
+              تصدير
+            </Button>
+            <Button onClick={handleNew} size="lg" data-testid="button-new-record">
+              <Plus className="ml-2 h-5 w-5" />
+              سجل جديد
+            </Button>
+          </div>
         </div>
-      </div>
 
-      <div className="rounded-lg border bg-card p-6">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <Card className="border-0 shadow-lg overflow-visible">
+        <CardHeader>
+          <CardTitle className="text-lg">خيارات البحث والتصفية</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-2">
             <Label>رقم الحصر</Label>
             <div className="flex gap-2">
@@ -282,34 +291,40 @@ export default function SearchPage() {
           </div>
         </div>
 
-        <div className="mt-4 flex gap-3">
-          <Button onClick={handleSearch} data-testid="button-search-all">
-            بحث شامل
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setFilters({
-                inventoryNumber: "",
-                registrationNumber: "",
-                name: "",
-                governorate: "",
-                region: "",
-                startDate: "",
-                endDate: "",
-                notes: "",
-              });
-              setFilteredRecords(records);
-            }}
-            data-testid="button-clear-filters"
-          >
-            <X className="ml-2 h-4 w-4" />
-            مسح الفلاتر
-          </Button>
-        </div>
-      </div>
+          <div className="mt-4 flex gap-3">
+            <Button onClick={handleSearch} size="lg" data-testid="button-search-all">
+              بحث شامل
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setFilters({
+                  inventoryNumber: "",
+                  registrationNumber: "",
+                  name: "",
+                  governorate: "",
+                  region: "",
+                  startDate: "",
+                  endDate: "",
+                  notes: "",
+                });
+                setFilteredRecords(records);
+              }}
+              data-testid="button-clear-filters"
+            >
+              <X className="ml-2 h-4 w-4" />
+              مسح الفلاتر
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-      <DataTable records={filteredRecords} onEdit={handleEdit} onDelete={handleDelete} />
+      <Card className="border-0 shadow-lg overflow-visible">
+        <CardContent className="p-0">
+          <DataTable records={filteredRecords} onEdit={handleEdit} onDelete={handleDelete} />
+        </CardContent>
+      </Card>
+    </div>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" dir="rtl">

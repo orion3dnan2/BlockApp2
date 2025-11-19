@@ -30,8 +30,8 @@ export default function Header() {
     .slice(0, 2);
 
   return (
-    <header className="border-b bg-card" dir="rtl">
-      <div className="flex items-center justify-between px-6 py-4">
+    <header className="sticky top-0 z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 shadow-sm" dir="rtl">
+      <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-3 hover-elevate">
