@@ -84,16 +84,18 @@ Preferred communication style: Simple, everyday language.
 
 *Records Table*
 - id (UUID primary key, auto-generated)
-- inventoryNumber (text)
-- registrationNumber (text)
-- civilRegistrationNumber (text)
-- name (text)
-- governorate (text)
-- region (text)
-- reportType (text: "بلاغ عادي", "بلاغ عاجل", "بلاغ سري", "قيد")
-- date (timestamp)
-- notes (text, nullable)
-- additionalNotes (text, nullable)
+- outgoingNumber (text) - رقم الصادر
+- militaryNumber (text) - الرقم العسكري
+- recordedNotes (text, nullable) - القيد المسجل
+- firstName (text) - الاسم الأول
+- secondName (text) - الاسم الثاني
+- thirdName (text) - الاسم الثالث
+- fourthName (text) - الاسم الرابع
+- tourDate (timestamp) - تاريخ الجولة
+- rank (text) - الرتبة
+- governorate (text) - المحافظة
+- office (text) - المكتب
+- policeStation (text) - المخفر
 - createdAt (timestamp, auto-generated)
 
 **Database Migrations**
@@ -140,3 +142,45 @@ Preferred communication style: Simple, everyday language.
 - Backend bundled with esbuild to `dist/index.js`
 - ESM module format throughout the application
 - Node.js runtime for production server
+
+## Recent Changes
+
+### Final Implementation Review (November 19, 2025)
+**Critical Fixes Implemented:**
+
+1. **Field-Specific Sorting Logic**
+   - Created field type buckets: dateFields, numericFields
+   - Date fields (tourDate, createdAt) use chronological comparison via getTime()
+   - Numeric fields (outgoingNumber, militaryNumber) use numeric extraction and comparison
+   - Text fields use Arabic locale-aware string comparison
+   - Eliminates "Invalid Date" fallback on non-date columns
+
+2. **Safe Date Handling & Validation**
+   - Removed automatic `new Date()` defaults that fabricate dates
+   - tourDate defaults to `undefined` for new records
+   - Preserves `undefined` state when editing records without dates
+   - Clearing date input triggers validation ("تاريخ الجولة مطلوب")
+   - Added instanceof Date check before calling toISOString()
+   - Created getTourDateDefault() helper for safe date parsing
+
+3. **Complete Test ID Coverage**
+   - All table headers, cells, and sort buttons
+   - All form inputs with descriptive data-testid attributes
+   - Dialog containers and action buttons
+   - Select dropdown items (rank, governorate)
+   - Search bar and reset buttons
+   - Empty state and result count displays
+
+4. **UI/UX Improvements**
+   - All 10 columns displayed with proper Arabic labels
+   - Sortable columns with directional icons (ArrowUp/ArrowDown)
+   - Cancel button only shows when editing existing records
+   - Reset button clears both values and errors
+   - Proper RTL layout throughout application
+
+### Database Migration (November 19, 2025)
+- Dropped and recreated database with Kuwait Ministry of Interior schema
+- Replaced old fields (inventoryNumber, registrationNumber, etc.) with government-specific fields
+- Split name into 4 separate fields as per requirements
+- Added all required fields: outgoingNumber, militaryNumber, recordedNotes, rank, office, policeStation
+- Populated with 10 sample records matching new schema
