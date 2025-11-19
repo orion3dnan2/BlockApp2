@@ -84,6 +84,7 @@ Preferred communication style: Simple, everyday language.
 
 *Records Table*
 - id (UUID primary key, auto-generated)
+- recordNumber (serial, unique) - رقم السجل التلقائي
 - outgoingNumber (text) - رقم الصادر
 - militaryNumber (text) - الرقم العسكري
 - recordedNotes (text, nullable) - القيد المسجل
@@ -144,6 +145,28 @@ Preferred communication style: Simple, everyday language.
 - Node.js runtime for production server
 
 ## Recent Changes
+
+### Auto-Incrementing Record Number & Navigation Enhancement (November 19, 2025)
+**New Features Added:**
+
+1. **Auto-Incrementing Record Number**
+   - Added `recordNumber` field to database schema (serial type, unique, not null)
+   - Automatically generated for each new record without user input
+   - Displayed as first column in data table with bold styling
+   - Included in search functionality for quick lookups
+   - Sortable column with numeric comparison
+
+2. **Back Button Navigation**
+   - Added back button to search page
+   - Uses wouter Link component for client-side routing
+   - Returns user to dashboard (home page)
+   - Clear Arabic label: "العودة للصفحة الرئيسية"
+   - Includes right arrow icon for RTL layout
+
+3. **Enhanced Search**
+   - Updated search filters to include recordNumber
+   - Search placeholder updated to reflect new capability
+   - Users can now search by: record number, name, outgoing number, or military number
 
 ### Final Implementation Review (November 19, 2025)
 **Critical Fixes Implemented:**

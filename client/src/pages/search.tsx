@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, ArrowRight } from "lucide-react";
@@ -14,7 +14,6 @@ import { Link } from "wouter";
 export default function SearchPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [filteredRecords, setFilteredRecords] = useState<Record[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [editingRecord, setEditingRecord] = useState<Record | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -23,14 +22,13 @@ export default function SearchPage() {
     queryKey: ["/api/records"],
   });
 
-  useEffect(() => {
+  const filteredRecords = useMemo(() => {
     if (!searchQuery.trim()) {
-      setFilteredRecords(records);
-      return;
+      return records;
     }
 
     const query = searchQuery.toLowerCase();
-    const filtered = records.filter((record) => {
+    return records.filter((record) => {
       const fullName = `${record.firstName} ${record.secondName} ${record.thirdName} ${record.fourthName}`.toLowerCase();
       return (
         String(record.recordNumber).includes(query) ||
@@ -39,8 +37,6 @@ export default function SearchPage() {
         record.militaryNumber.toLowerCase().includes(query)
       );
     });
-
-    setFilteredRecords(filtered);
   }, [records, searchQuery]);
 
   const createMutation = useMutation({
@@ -81,23 +77,8 @@ export default function SearchPage() {
   });
 
   const handleSearch = () => {
-    if (!searchQuery.trim()) {
-      setFilteredRecords(records);
-      return;
-    }
-
-    const query = searchQuery.toLowerCase();
-    const filtered = records.filter((record) => {
-      const fullName = `${record.firstName} ${record.secondName} ${record.thirdName} ${record.fourthName}`.toLowerCase();
-      return (
-        String(record.recordNumber).includes(query) ||
-        fullName.includes(query) ||
-        record.outgoingNumber.toLowerCase().includes(query) ||
-        record.militaryNumber.toLowerCase().includes(query)
-      );
-    });
-
-    setFilteredRecords(filtered);
+    // Search is now handled by useMemo automatically
+    // This function is kept for the button but doesn't need to do anything
   };
 
   const handleSubmit = async (data: any) => {
