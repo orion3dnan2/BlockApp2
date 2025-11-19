@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import Header from "@/components/Header";
+import Header, { Footer } from "@/components/Header";
 import Dashboard from "@/pages/dashboard";
 import SearchPage from "@/pages/search";
 import LoginPage from "@/pages/login";
@@ -19,6 +19,7 @@ function ProtectedLayout({ children }: { children: React.ReactNode }) {
         <main className="flex-1">
           {children}
         </main>
+        <Footer />
       </div>
     </ProtectedRoute>
   );

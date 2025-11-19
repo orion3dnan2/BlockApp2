@@ -1,76 +1,46 @@
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Moon, Sun, LogOut } from "lucide-react";
-import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 
 export default function Header() {
   const { user, logout } = useAuth();
-  const [isDark, setIsDark] = useState(false);
 
-  useEffect(() => {
-    const isDarkMode = document.documentElement.classList.contains("dark");
-    setIsDark(isDarkMode);
-  }, []);
-
-  const toggleTheme = () => {
-    const newIsDark = !isDark;
-    setIsDark(newIsDark);
-    document.documentElement.classList.toggle("dark", newIsDark);
-    localStorage.setItem("theme", newIsDark ? "dark" : "light");
-  };
-
-  const username = user?.displayName || "مستخدم";
-  const initials = username
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+  if (!user) return null;
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 shadow-sm" dir="rtl">
-      <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-3 hover-elevate">
-              <Avatar className="h-10 w-10" data-testid="avatar-user">
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-sm font-medium" data-testid="text-username">
-                {username}
-              </span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={logout} data-testid="button-logout">
-              <LogOut className="ml-2 h-4 w-4" />
-              تسجيل الخروج
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+    <header className="bg-blue-700 text-white shadow-md" dir="rtl">
+      <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-3">
+        <h1 className="text-2xl font-bold text-yellow-400">Block System</h1>
         
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            data-testid="button-theme-toggle"
-          >
-            {isDark ? (
-              <Sun className="h-5 w-5" />
-            ) : (
-              <Moon className="h-5 w-5" />
-            )}
-          </Button>
-          <h1 className="text-2xl font-semibold" data-testid="text-app-title">
-            Block System
-          </h1>
+        <div className="flex items-center gap-2 text-sm">
+          <span className="font-semibold">المستخدم :</span>
+          <span>{user.displayName}</span>
         </div>
       </div>
     </header>
+  );
+}
+
+export function Footer() {
+  const { logout } = useAuth();
+
+  return (
+    <footer className="bg-blue-700 text-white" dir="rtl">
+      <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-3">
+        <div className="text-sm font-semibold">
+          مدير النظام
+        </div>
+        
+        <Button
+          variant="ghost"
+          onClick={logout}
+          className="gap-2 text-white hover:bg-blue-600 hover:text-white"
+          data-testid="button-logout"
+        >
+          <LogOut className="h-4 w-4" />
+          <span>خروج</span>
+        </Button>
+      </div>
+    </footer>
   );
 }
