@@ -193,17 +193,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/records", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      console.log("[POST /api/records] Request body:", JSON.stringify(req.body, null, 2));
       const data = insertRecordSchema.parse(req.body);
-      console.log("[POST /api/records] Parsed data:", JSON.stringify(data, null, 2));
       const record = await storage.createRecord(data);
       res.status(201).json(record);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        console.error("[POST /api/records] Validation error:", JSON.stringify(error.errors, null, 2));
         return res.status(400).json({ message: "Invalid input", errors: error.errors });
       }
-      console.error("[POST /api/records] Server error:", error);
       res.status(500).json({ message: "Server error" });
     }
   });
