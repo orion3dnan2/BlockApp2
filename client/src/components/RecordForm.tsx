@@ -21,7 +21,24 @@ interface RecordFormProps {
 }
 
 const governorates = ["الجهراء", "الأحمدي", "الفروانية", "حولي", "مبارك الكبير", "الكويت"];
-const ranks = ["نقيب", "ملازم أول", "ملازم", "رقيب أول", "رقيب", "عريف"];
+const ranks = [
+  "جندي",
+  "جندي أول",
+  "عريف",
+  "رقيب",
+  "رقيب أول",
+  "وكيل ضابط",
+  "ملازم",
+  "ملازم أول",
+  "نقيب",
+  "رائد",
+  "مقدم",
+  "عقيد",
+  "عميد",
+  "لواء",
+  "فريق",
+  "فريق أول"
+];
 
 export default function RecordForm({ record, onSubmit, onCancel }: RecordFormProps) {
   const getTourDateDefault = (tourDate: any): Date | undefined => {
