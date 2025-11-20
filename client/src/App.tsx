@@ -11,6 +11,7 @@ import SearchPage from "@/pages/search";
 import DataEntryPage from "@/pages/data-entry";
 import ReportsPage from "@/pages/reports";
 import UsersPage from "@/pages/users";
+import ImportPage from "@/pages/import";
 import LoginPage from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -57,20 +58,9 @@ function Router() {
           <UsersPage />
         </ProtectedLayout>
       </Route>
-      <Route path="/operations">
+      <Route path="/import">
         <ProtectedLayout>
-          <div className="container mx-auto max-w-7xl px-6 py-8" dir="rtl">
-            <h2 className="text-2xl font-semibold">عمليات البلاغات</h2>
-            <p className="mt-4 text-muted-foreground">قريباً...</p>
-          </div>
-        </ProtectedLayout>
-      </Route>
-      <Route path="/backup">
-        <ProtectedLayout>
-          <div className="container mx-auto max-w-7xl px-6 py-8" dir="rtl">
-            <h2 className="text-2xl font-semibold">النسخة الاحتياطية</h2>
-            <p className="mt-4 text-muted-foreground">قريباً...</p>
-          </div>
+          <ImportPage />
         </ProtectedLayout>
       </Route>
       <Route component={NotFound} />

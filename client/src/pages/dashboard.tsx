@@ -29,7 +29,7 @@ export default function Dashboard() {
     { 
       title: "استيراد", 
       icon: Database, 
-      path: "/backup",
+      path: "/import",
     },
   ];
 
