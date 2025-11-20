@@ -24,7 +24,7 @@ export const records = pgTable("records", {
   tourDate: timestamp("tour_date").notNull(),
   rank: text("rank").notNull(),
   governorate: text("governorate").notNull(),
-  office: text("office").notNull(),
+  office: text("office"),
   policeStation: text("police_station").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });

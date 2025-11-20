@@ -24,7 +24,6 @@ const formSchema = z.object({
   }),
   rank: z.string().min(1, "الرتبة مطلوبة"),
   governorate: z.string().min(1, "المحافظة مطلوبة"),
-  office: z.string().min(1, "المكتب مطلوب"),
   policeStation: z.string().min(1, "المخفر مطلوب"),
 });
 
@@ -61,7 +60,6 @@ export default function RecordForm({ record, onSubmit, onCancel }: RecordFormPro
           tourDate: getTourDateDefault(record.tourDate),
           rank: record.rank || "",
           governorate: record.governorate || "",
-          office: record.office || "",
           policeStation: record.policeStation || "",
         }
       : {
@@ -76,7 +74,6 @@ export default function RecordForm({ record, onSubmit, onCancel }: RecordFormPro
           tourDate: undefined,
           rank: "",
           governorate: "",
-          office: "",
           policeStation: "",
         },
   });
@@ -90,81 +87,44 @@ export default function RecordForm({ record, onSubmit, onCancel }: RecordFormPro
     await onSubmit({
       ...data,
       tourDate: tourDateISO,
+      office: null, // office field is now nullable and not in the form
     });
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6" dir="rtl">
-        {/* Critical Fields Row - Red Background */}
-        <div className="grid grid-cols-1 gap-4 rounded-lg bg-red-50 p-4 md:grid-cols-3">
-          <FormField
-            control={form.control}
-            name="outgoingNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-red-700 font-semibold">رقم الصادر *</FormLabel>
-                <FormControl>
-                  <Input {...field} className="bg-white" data-testid="input-outgoing-number" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        {/* 1. رقم الصادر */}
+        <FormField
+          control={form.control}
+          name="outgoingNumber"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="font-semibold">رقم الصادر *</FormLabel>
+              <FormControl>
+                <Input {...field} data-testid="input-outgoing-number" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="militaryNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-red-700 font-semibold">الرقم العسكري</FormLabel>
-                <FormControl>
-                  <Input {...field} value={field.value || ""} className="bg-white" data-testid="input-military-number" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        {/* 2. الرقم العسكري */}
+        <FormField
+          control={form.control}
+          name="militaryNumber"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="font-semibold">الرقم العسكري</FormLabel>
+              <FormControl>
+                <Input {...field} value={field.value || ""} data-testid="input-military-number" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="ports"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-red-700 font-semibold">المنافذ</FormLabel>
-                <FormControl>
-                  <Input {...field} value={field.value || ""} className="bg-white" data-testid="input-ports" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {/* Notes Field */}
-        <div>
-          <FormField
-            control={form.control}
-            name="recordedNotes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-semibold">الملاحظات المدونة</FormLabel>
-                <FormControl>
-                  <Textarea
-                    {...field}
-                    value={field.value || ""}
-                    className="resize-none"
-                    rows={2}
-                    data-testid="input-recorded-notes"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {/* Name Fields - 4 Parts */}
+        {/* 3. الاسم - 4 Parts */}
         <div>
           <FormLabel className="mb-2 block font-semibold">الاسم *</FormLabel>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -222,117 +182,140 @@ export default function RecordForm({ record, onSubmit, onCancel }: RecordFormPro
           </div>
         </div>
 
-        {/* Other Fields */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <FormField
-            control={form.control}
-            name="tourDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-semibold">تاريخ الجولة *</FormLabel>
+        {/* 4. الرتبة */}
+        <FormField
+          control={form.control}
+          name="rank"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="font-semibold">الرتبة *</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
-                  <Input
-                    type="date"
-                    value={field.value && field.value instanceof Date && !isNaN(field.value.getTime()) ? field.value.toISOString().split("T")[0] : ""}
-                    onChange={(e) => {
-                      const dateValue = e.target.value;
-                      if (dateValue) {
-                        const newDate = new Date(dateValue);
-                        if (!isNaN(newDate.getTime())) {
-                          field.onChange(newDate);
-                        }
-                      } else {
-                        field.onChange(undefined as any);
+                  <SelectTrigger data-testid="select-rank">
+                    <SelectValue placeholder="اختر الرتبة" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {ranks.map((rank) => (
+                    <SelectItem key={rank} value={rank} data-testid={`select-item-rank-${rank}`}>
+                      {rank}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* 5. المحافظة */}
+        <FormField
+          control={form.control}
+          name="governorate"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="font-semibold">المحافظة *</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger data-testid="select-governorate">
+                    <SelectValue placeholder="اختر المحافظة" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {governorates.map((gov) => (
+                    <SelectItem key={gov} value={gov} data-testid={`select-item-governorate-${gov}`}>
+                      {gov}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* 6. المخفر */}
+        <FormField
+          control={form.control}
+          name="policeStation"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="font-semibold">المخفر *</FormLabel>
+              <FormControl>
+                <Input {...field} data-testid="input-police-station" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* 7. المنافذ */}
+        <FormField
+          control={form.control}
+          name="ports"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="font-semibold">المنافذ</FormLabel>
+              <FormControl>
+                <Input {...field} value={field.value || ""} data-testid="input-ports" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* 8. تاريخ الجولة */}
+        <FormField
+          control={form.control}
+          name="tourDate"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="font-semibold">تاريخ الجولة *</FormLabel>
+              <FormControl>
+                <Input
+                  type="date"
+                  value={field.value && field.value instanceof Date && !isNaN(field.value.getTime()) ? field.value.toISOString().split("T")[0] : ""}
+                  onChange={(e) => {
+                    const dateValue = e.target.value;
+                    if (dateValue) {
+                      const newDate = new Date(dateValue);
+                      if (!isNaN(newDate.getTime())) {
+                        field.onChange(newDate);
                       }
-                    }}
-                    data-testid="input-tour-date"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                    } else {
+                      field.onChange(undefined as any);
+                    }
+                  }}
+                  data-testid="input-tour-date"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="rank"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-semibold">الرتبة *</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger data-testid="select-rank">
-                      <SelectValue placeholder="اختر الرتبة" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {ranks.map((rank) => (
-                      <SelectItem key={rank} value={rank} data-testid={`select-item-rank-${rank}`}>
-                        {rank}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        {/* 9. الملاحظات المدونة */}
+        <FormField
+          control={form.control}
+          name="recordedNotes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="font-semibold">الملاحظات المدونة</FormLabel>
+              <FormControl>
+                <Textarea
+                  {...field}
+                  value={field.value || ""}
+                  className="resize-none"
+                  rows={3}
+                  data-testid="input-recorded-notes"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="governorate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-semibold">المحافظة *</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger data-testid="select-governorate">
-                      <SelectValue placeholder="اختر المحافظة" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {governorates.map((gov) => (
-                      <SelectItem key={gov} value={gov} data-testid={`select-item-governorate-${gov}`}>
-                        {gov}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="office"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-semibold">المكتب *</FormLabel>
-                <FormControl>
-                  <Input {...field} data-testid="input-office" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="policeStation"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-semibold">المخفر *</FormLabel>
-                <FormControl>
-                  <Input {...field} data-testid="input-police-station" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {/* Form Actions */}
+        {/* 10. الإجراء - Form Actions */}
         <div className="flex justify-end gap-3">
           {record && (
             <Button
