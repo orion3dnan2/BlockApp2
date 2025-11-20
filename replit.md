@@ -40,6 +40,7 @@ Preferred communication style: Simple, everyday language.
 **Key Frontend Pages**
 - Dashboard: Module navigation grid with cards for Reports, Search, Users, Operations, and Backup
 - Search Page: Advanced filtering interface with data table, CRUD operations
+- Reports Page: Comprehensive statistics and analytics dashboard with date filtering and print support
 - Login Page: Tabbed authentication (login/register) with form validation
 
 ### Backend Architecture
@@ -145,6 +146,61 @@ Preferred communication style: Simple, everyday language.
 - Node.js runtime for production server
 
 ## Recent Changes
+
+### Reports Page Implementation (November 20, 2025)
+**New Feature: Comprehensive Reports & Analytics Dashboard**
+
+Developed a complete reporting system with the following features:
+
+1. **Statistics Dashboard**
+   - Total records count
+   - Today's records count
+   - Last week records count (7 days)
+   - Last month records count (30 days)
+   - All calculations use tourDate with fallback to createdAt for robustness
+
+2. **Date Filtering System**
+   - Filter options: All records, Today, Last Week, Last Month
+   - Dynamically updates all statistics and reports based on selected period
+   - Uses memoized calculations for optimal performance
+
+3. **Detailed Distribution Reports**
+   - By Governorate (المحافظة): Shows record count per governorate, sorted by count
+   - By Rank (الرتبة): Shows record count per rank, sorted by count
+   - By Office (المكتب): Shows record count per office, sorted by count
+   - By Police Station (المخفر): Shows record count per station, sorted by count
+   - All reports display in sortable tables
+
+4. **Print Functionality**
+   - Dedicated print button triggers window.print()
+   - Print-only header with ministry emblem and official title
+   - Print date automatically included
+   - All reports formatted for professional printing
+
+5. **Error Handling**
+   - Comprehensive error state with user-friendly messages
+   - Retry button for failed queries
+   - Back to home navigation option
+
+6. **User Experience**
+   - RTL-first Arabic interface
+   - Responsive grid layout (1-4 columns based on viewport)
+   - Loading skeleton states
+   - Back button to return to dashboard
+   - Complete data-testid coverage for QA automation
+
+7. **Summary Section**
+   - Shows selected filter period
+   - Displays filtered record count
+   - Shows unique governorate and rank counts
+
+**Technical Implementation:**
+- React Query for data fetching with error handling
+- useMemo hooks for efficient aggregation calculations
+- date-fns library for Arabic date formatting
+- shadcn/ui components (Card, Table, Select, Button)
+- Full TypeScript type safety
+- Comprehensive test coverage with Playwright
 
 ### Auto-Incrementing Record Number & Navigation Enhancement (November 19, 2025)
 **New Features Added:**
