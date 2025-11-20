@@ -46,7 +46,7 @@ export default function SearchPage() {
   }, [records]);
 
   const uniqueOffices = useMemo(() => {
-    const values = Array.from(new Set(records.map(r => r.office))).filter(Boolean);
+    const values = Array.from(new Set(records.map(r => r.office))).filter((v): v is string => Boolean(v));
     return values.sort((a, b) => a.localeCompare(b, "ar"));
   }, [records]);
 
