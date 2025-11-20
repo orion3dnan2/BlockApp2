@@ -23,13 +23,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         displayName,
       });
 
-      const token = generateToken(user.id, user.username, user.displayName, user.role || "user");
+      const token = generateToken(user.id, user.username, user.displayName);
       res.json({
         user: {
           id: user.id,
           username: user.username,
           displayName: user.displayName,
-          role: user.role || "user",
         },
         token,
       });
@@ -59,13 +58,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      const token = generateToken(user.id, user.username, user.displayName, user.role || "user");
+      const token = generateToken(user.id, user.username, user.displayName);
       res.json({
         user: {
           id: user.id,
           username: user.username,
           displayName: user.displayName,
-          role: user.role || "user",
         },
         token,
       });
@@ -78,81 +76,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ user: req.user });
   });
 
-  // User management routes (admin only)
-  app.get("/api/users", authenticateToken, async (req: AuthRequest, res) => {
-    try {
-      // Check if user is admin
-      if (req.user?.role !== "admin") {
-        return res.status(403).json({ message: "Forbidden: Admin access required" });
-      }
-      
-      const allUsers = await storage.getAllUsers();
-      // Don't send passwords to frontend
-      const usersWithoutPasswords = allUsers.map(({ password, ...user }) => user);
-      res.json(usersWithoutPasswords);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-
-  app.post("/api/users", authenticateToken, async (req: AuthRequest, res) => {
-    try {
-      // Check if user is admin
-      if (req.user?.role !== "admin") {
-        return res.status(403).json({ message: "Forbidden: Admin access required" });
-      }
-
-      const { username, password, displayName, role } = insertUserSchema.parse(req.body);
-
-      const existingUser = await storage.getUserByUsername(username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
-      }
-
-      const hashedPassword = await hashPassword(password);
-      const user = await storage.createUser({
-        username,
-        password: hashedPassword,
-        displayName,
-        role: role || "user",
-      });
-
-      const { password: _, ...userWithoutPassword } = user;
-      res.status(201).json(userWithoutPassword);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid input", errors: error.errors });
-      }
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-
-  app.delete("/api/users/:id", authenticateToken, async (req: AuthRequest, res) => {
-    try {
-      // Check if user is admin
-      if (req.user?.role !== "admin") {
-        return res.status(403).json({ message: "Forbidden: Admin access required" });
-      }
-
-      // Prevent admin from deleting themselves
-      if (req.user?.id === req.params.id) {
-        return res.status(400).json({ message: "Cannot delete your own account" });
-      }
-
-      const success = await storage.deleteUser(req.params.id);
-      if (!success) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  });
-
   // Records routes
   app.get("/api/records", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const records = await storage.getRecords();
+      res.json(records);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.get("/api/records/search", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const filters: any = {};
+
+      if (req.query.inventoryNumber) filters.inventoryNumber = String(req.query.inventoryNumber);
+      if (req.query.registrationNumber) filters.registrationNumber = String(req.query.registrationNumber);
+      if (req.query.name) filters.name = String(req.query.name);
+      if (req.query.governorate) filters.governorate = String(req.query.governorate);
+      if (req.query.region) filters.region = String(req.query.region);
+      if (req.query.startDate) filters.startDate = new Date(String(req.query.startDate));
+      if (req.query.endDate) filters.endDate = new Date(String(req.query.endDate));
+      if (req.query.notes) filters.notes = String(req.query.notes);
+
+      const records = await storage.searchRecords(filters);
       res.json(records);
     } catch (error) {
       res.status(500).json({ message: "Server error" });

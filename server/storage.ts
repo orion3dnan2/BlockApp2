@@ -6,13 +6,21 @@ export interface IStorage {
   // User methods
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
-  getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
-  deleteUser(id: string): Promise<boolean>;
 
   // Record methods
   getRecords(): Promise<Record[]>;
   getRecordById(id: string): Promise<Record | undefined>;
+  searchRecords(filters: {
+    inventoryNumber?: string;
+    registrationNumber?: string;
+    name?: string;
+    governorate?: string;
+    region?: string;
+    startDate?: Date;
+    endDate?: Date;
+    notes?: string;
+  }): Promise<Record[]>;
   createRecord(record: InsertRecord): Promise<Record>;
   updateRecord(id: string, record: Partial<InsertRecord>): Promise<Record | undefined>;
   deleteRecord(id: string): Promise<boolean>;
@@ -38,18 +46,6 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users).orderBy(users.createdAt);
-  }
-
-  async deleteUser(id: string): Promise<boolean> {
-    const result = await db
-      .delete(users)
-      .where(eq(users.id, id))
-      .returning();
-    return result.length > 0;
-  }
-
   // Record methods
   async getRecords(): Promise<Record[]> {
     return await db.select().from(records).orderBy(records.createdAt);
@@ -60,6 +56,58 @@ export class DatabaseStorage implements IStorage {
     return record || undefined;
   }
 
+  async searchRecords(filters: {
+    inventoryNumber?: string;
+    registrationNumber?: string;
+    name?: string;
+    governorate?: string;
+    region?: string;
+    startDate?: Date;
+    endDate?: Date;
+    notes?: string;
+  }): Promise<Record[]> {
+    const conditions = [];
+
+    if (filters.inventoryNumber) {
+      conditions.push(like(records.inventoryNumber, `%${filters.inventoryNumber}%`));
+    }
+    if (filters.registrationNumber) {
+      conditions.push(like(records.registrationNumber, `%${filters.registrationNumber}%`));
+    }
+    if (filters.name) {
+      conditions.push(like(records.name, `%${filters.name}%`));
+    }
+    if (filters.governorate) {
+      conditions.push(eq(records.governorate, filters.governorate));
+    }
+    if (filters.region) {
+      conditions.push(like(records.region, `%${filters.region}%`));
+    }
+    if (filters.startDate) {
+      conditions.push(gte(records.date, filters.startDate));
+    }
+    if (filters.endDate) {
+      conditions.push(lte(records.date, filters.endDate));
+    }
+    if (filters.notes) {
+      conditions.push(
+        or(
+          like(records.notes, `%${filters.notes}%`),
+          like(records.additionalNotes, `%${filters.notes}%`)
+        )
+      );
+    }
+
+    if (conditions.length === 0) {
+      return await this.getRecords();
+    }
+
+    return await db
+      .select()
+      .from(records)
+      .where(and(...conditions))
+      .orderBy(records.createdAt);
+  }
 
   async createRecord(insertRecord: InsertRecord): Promise<Record> {
     const [record] = await db

@@ -13,7 +13,6 @@ export interface AuthRequest extends Request {
     id: string;
     username: string;
     displayName: string;
-    role: string;
   };
 }
 
@@ -25,13 +24,13 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return await bcrypt.compare(password, hash);
 }
 
-export function generateToken(userId: string, username: string, displayName: string, role: string = "user"): string {
-  return jwt.sign({ id: userId, username, displayName, role }, JWT_SECRET, { expiresIn: "7d" });
+export function generateToken(userId: string, username: string, displayName: string): string {
+  return jwt.sign({ id: userId, username, displayName }, JWT_SECRET, { expiresIn: "7d" });
 }
 
-export function verifyToken(token: string): { id: string; username: string; displayName: string; role: string } | null {
+export function verifyToken(token: string): { id: string; username: string; displayName: string } | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as { id: string; username: string; displayName: string; role: string };
+    return jwt.verify(token, JWT_SECRET) as { id: string; username: string; displayName: string };
   } catch {
     return null;
   }
