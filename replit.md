@@ -21,11 +21,12 @@ Preferred communication style: Simple, everyday language.
 **State Management Strategy:** React Query for server state, Context API for authentication, and React hooks for local UI state. `react-hook-form` with Zod handles form state and validation.
 
 **Key Frontend Pages:**
-- **Dashboard:** Navigation to core modules (Reports, Search, Data Entry, Users, Backup).
+- **Dashboard:** Navigation to core modules (Reports, Search, Data Entry, Users, Import).
 - **Search Page:** Read-only query interface with advanced filters and a data table.
 - **Data Entry Page:** Dedicated interface for adding and editing records with CRUD operations.
 - **Reports Page:** Enhanced statistics and analytics dashboard with comprehensive filtering (date, governorate, police station, action type, rank, person name), professional print layout, and distribution analysis with percentages.
 - **Users Page:** Comprehensive user management (create, update, delete, search) with role-based permissions system (admin, supervisor, user).
+- **Import Page:** Excel file import interface for bulk data entry, restricted to admin and supervisor roles, with drag-and-drop upload, client-side parsing, and batch server processing.
 - **Login Page:** Tabbed authentication (login/register) with form validation.
 
 ### Backend Architecture
@@ -39,6 +40,7 @@ Preferred communication style: Simple, everyday language.
 - `/api/users` for user management (GET, PUT, DELETE).
 - `/api/records` for record CRUD operations with search/filter support.
 - `/api/records/search` for advanced record search.
+- `/api/records/import` for bulk record import from Excel files (admin/supervisor only).
 
 **Data Access Pattern:** Repository pattern with an `IStorage` interface, implemented by `DatabaseStorage` for PostgreSQL operations.
 
@@ -81,6 +83,7 @@ Preferred communication style: Simple, everyday language.
 **Protected Routes:**
 - `POST/PUT/DELETE /api/users`: Requires admin role
 - `POST/PUT/DELETE /api/records`: Requires admin or supervisor role
+- `POST /api/records/import`: Requires admin or supervisor role
 - `GET /api/users, /api/records`: Requires authentication only
 
 **Creating the First Admin:**
@@ -94,6 +97,49 @@ After updating the role, the user must log in again to receive a new JWT token w
 - Users with old JWT tokens (before role implementation) must re-login to get tokens with role information
 - Only admins can create other admins or supervisors through the Users page
 - Regular users cannot perform any create/update/delete operations
+
+## Excel Import Feature
+
+**Access:** Admin and Supervisor roles only
+
+**Frontend Implementation:**
+- Located at `/import` route
+- Role-based guard redirects unauthorized users to dashboard
+- Drag-and-drop file upload interface with .xlsx/.xls validation
+- Client-side Excel parsing using `xlsx` library
+- Processes entire file and sends all records in a single POST request
+- Progress indicator shows parsing (30%), sending (50%), and completion (100%)
+- Results display with success/failure counts and detailed error messages
+
+**Backend Implementation:**
+- Endpoint: `POST /api/records/import`
+- Protected with `authenticateToken` and `requireAdminOrSupervisor` middleware
+- Accepts JSON body with `records` array
+- Validates each record using `insertRecordSchema` from Drizzle-Zod
+- Creates valid records, skips invalid ones with error tracking
+- Returns: `{ success: number, failed: number, errors: string[] }`
+- Error messages limited to 50 for performance
+
+**Excel File Format:**
+Required columns (Arabic header names):
+- رقم الصادر (outgoing number)
+- الرقم العسكري (military number, optional)
+- نوع الاجراء (action type, optional)
+- المنافذ (ports, optional)
+- الملاحظات المدونة (recorded notes, optional)
+- الاسم الاول (first name)
+- الاسم الثاني (second name)
+- الاسم الثالث (third name)
+- الاسم الرابع (fourth name)
+- تاريخ الجولة (tour date)
+- الرتبة (rank)
+- المحافظة (governorate)
+- المخفر (police station)
+
+**Future Improvements (Recommended by Architect):**
+- Add payload-size/row-count limits to prevent memory exhaustion
+- Implement batched storage insertions for very large files
+- Provide downloadable CSV of failures for easier correction and re-import
 
 ## External Dependencies
 
@@ -113,6 +159,9 @@ After updating the role, the user must log in again to receive a new JWT token w
 - **@hookform/resolvers:** Zod integration for `react-hook-form`.
 - **Zod:** Runtime type validation and schema definition.
 - **drizzle-zod:** Automatic Zod schema generation from Drizzle schemas.
+
+**Excel Import:**
+- **xlsx:** Excel file parsing library for client-side processing and bulk data import.
 
 **Required Environment Variables:**
 - `DATABASE_URL`: PostgreSQL connection string.
