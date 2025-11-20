@@ -266,8 +266,8 @@ export default function RecordForm({ record, onSubmit, onCancel }: RecordFormPro
           />
         </div>
 
-        {/* Row 4: تاريخ الجولة */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {/* Row 4: تاريخ الجولة والإجراء */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <FormField
             control={form.control}
             name="tourDate"
@@ -296,6 +296,43 @@ export default function RecordForm({ record, onSubmit, onCancel }: RecordFormPro
               </FormItem>
             )}
           />
+
+          {/* الإجراء */}
+          <div>
+            <FormLabel className="font-semibold block mb-2">الإجراء</FormLabel>
+            <div className="flex gap-3">
+              {record && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onCancel}
+                  data-testid="button-cancel"
+                  className="flex-1"
+                >
+                  إلغاء
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  form.reset();
+                  form.clearErrors();
+                }}
+                data-testid="button-reset"
+                className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 flex-1"
+              >
+                مسح
+              </Button>
+              <Button 
+                type="submit" 
+                data-testid="button-submit" 
+                className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 flex-1"
+              >
+                حفظ
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Row 5: الملاحظات المدونة */}
@@ -318,35 +355,6 @@ export default function RecordForm({ record, onSubmit, onCancel }: RecordFormPro
             </FormItem>
           )}
         />
-
-        {/* Form Actions */}
-        <div className="flex justify-end gap-3">
-          {record && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              data-testid="button-cancel"
-            >
-              إلغاء
-            </Button>
-          )}
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => {
-              form.reset();
-              form.clearErrors();
-            }}
-            data-testid="button-reset"
-            className="bg-yellow-400 hover:bg-yellow-500 text-gray-900"
-          >
-            مسح
-          </Button>
-          <Button type="submit" data-testid="button-submit" className="bg-yellow-400 hover:bg-yellow-500 text-gray-900">
-            حفظ
-          </Button>
-        </div>
       </form>
     </Form>
   );
