@@ -104,7 +104,7 @@ export default function UsersPage() {
   // Create mutation
   const createMutation = useMutation({
     mutationFn: async (data: CreateUserFormData) => {
-      const res = await apiRequest("POST", "/api/auth/register", data);
+      const res = await apiRequest("POST", "/api/users", data);
       return await res.json();
     },
     onSuccess: () => {

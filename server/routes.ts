@@ -21,6 +21,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         username,
         password: hashedPassword,
         displayName,
+        role: "user",
       });
 
       const token = generateToken(user.id, user.username, user.displayName);
@@ -88,6 +89,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/users", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const validated = insertUserSchema.parse(req.body);
+
+      const existingUser = await storage.getUserByUsername(validated.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+
+      const hashedPassword = await hashPassword(validated.password);
+      const user = await storage.createUser({
+        username: validated.username,
+        password: hashedPassword,
+        displayName: validated.displayName,
+        role: validated.role,
+      });
+
+      const { password: _, ...userWithoutPassword } = user;
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   app.put("/api/users/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
       // Create validation schema for updates (all fields optional)
@@ -95,6 +123,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         username: z.string().min(3, "Username must be at least 3 characters").optional(),
         password: z.string().min(6, "Password must be at least 6 characters").optional(),
         displayName: z.string().min(2, "Display name must be at least 2 characters").optional(),
+        role: z.enum(["admin", "supervisor", "user"]).optional(),
       });
       
       const validated = updateUserSchema.parse(req.body);
@@ -102,6 +131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (validated.displayName) updateData.displayName = validated.displayName;
       if (validated.username) updateData.username = validated.username;
+      if (validated.role) updateData.role = validated.role;
       if (validated.password) {
         updateData.password = await hashPassword(validated.password);
       }
