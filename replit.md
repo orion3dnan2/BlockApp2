@@ -48,7 +48,19 @@ Preferred communication style: Simple, everyday language.
 
 **Schema Design:**
 - **Users Table:** `id` (UUID), `username` (unique), `password` (hashed), `displayName`.
-- **Records Table:** `id` (UUID), `recordNumber` (serial, unique, auto-generated), `outgoingNumber` (non-unique, allows duplicates), `militaryNumber` (optional), `ports` (optional), `recordedNotes`, `firstName`, `secondName`, `thirdName`, `fourthName`, `tourDate`, `rank`, `governorate`, `office`, `policeStation`, `createdAt`.
+- **Records Table:** `id` (UUID), `recordNumber` (serial, unique, auto-generated), `outgoingNumber` (non-unique, allows duplicates), `militaryNumber` (optional), `ports` (optional), `recordedNotes` (optional), `firstName`, `secondName`, `thirdName`, `fourthName`, `tourDate`, `rank`, `governorate`, `office` (optional, not displayed in form), `policeStation`, `createdAt`.
+
+**Form Field Order (Data Entry Page):**
+1. رقم الصادر (Outgoing Number) - required
+2. الرقم العسكري (Military Number) - optional
+3. الاسم (Full Name - 4 parts) - required
+4. الرتبة (Rank) - required
+5. المحافظة (Governorate) - required
+6. المخفر (Police Station) - required
+7. المنافذ (Ports) - optional
+8. تاريخ الجولة (Tour Date) - required
+9. الملاحظات المدونة (Recorded Notes) - optional
+10. Form Actions (مسح - Reset, حفظ - Save)
 
 **Database Migrations:** Drizzle Kit for schema migrations, managed in the `/migrations` directory.
 
