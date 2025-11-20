@@ -39,6 +39,8 @@ export const insertRecordSchema = createInsertSchema(records).omit({
   id: true,
   recordNumber: true,
   createdAt: true,
+}).extend({
+  tourDate: z.union([z.date(), z.string()]).pipe(z.coerce.date()),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

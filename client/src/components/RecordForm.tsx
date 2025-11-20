@@ -11,9 +11,9 @@ import type { Record } from "@shared/schema";
 
 const formSchema = z.object({
   outgoingNumber: z.string().min(1, "رقم الصادر مطلوب"),
-  militaryNumber: z.string().optional().nullable(),
-  ports: z.string().optional().nullable(),
-  recordedNotes: z.string().optional().nullable(),
+  militaryNumber: z.string().nullish().transform(val => val || null),
+  ports: z.string().nullish().transform(val => val || null),
+  recordedNotes: z.string().nullish().transform(val => val || null),
   firstName: z.string().min(1, "الاسم الأول مطلوب"),
   secondName: z.string().min(1, "الاسم الثاني مطلوب"),
   thirdName: z.string().min(1, "الاسم الثالث مطلوب"),
