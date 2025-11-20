@@ -1,26 +1,25 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, ArrowRight, Filter, X } from "lucide-react";
+import { Search, ArrowRight, Filter, X, Eye } from "lucide-react";
 import DataTable from "@/components/DataTable";
-import RecordForm from "@/components/RecordForm";
 import type { Record } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { ApiClient } from "@/lib/api";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
 
 export default function SearchPage() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
-  const [editingRecord, setEditingRecord] = useState<Record | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [viewingRecord, setViewingRecord] = useState<Record | null>(null);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   
   // Advanced filter states
@@ -104,89 +103,15 @@ export default function SearchPage() {
     return result;
   }, [records, searchQuery, filterGovernorate, filterRank, filterOffice, filterPoliceStation, filterStartDate, filterEndDate]);
 
-  const createMutation = useMutation({
-    mutationFn: (data: any) => ApiClient.post<Record>("/api/records", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/records"] });
-      toast({
-        title: "تم الحفظ",
-        description: "تم إضافة السجل بنجاح",
-      });
-      setEditingRecord(null);
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
-      ApiClient.put<Record>(`/api/records/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/records"] });
-      toast({
-        title: "تم التحديث",
-        description: "تم تحديث السجل بنجاح",
-      });
-      setEditingRecord(null);
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => ApiClient.delete(`/api/records/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/records"] });
-      toast({
-        title: "تم الحذف",
-        description: "تم حذف السجل بنجاح",
-      });
-      setDeleteId(null);
-    },
-  });
-
-  const handleSearch = () => {
-    // Search is now handled by useMemo automatically
-    // This function is kept for the button but doesn't need to do anything
-  };
-
-  const handleSubmit = async (data: any) => {
-    try {
-      if (editingRecord) {
-        await updateMutation.mutateAsync({ id: editingRecord.id, data });
-      } else {
-        await createMutation.mutateAsync(data);
-      }
-    } catch (error: any) {
-      toast({
-        title: "خطأ",
-        description: error.message || "حدث خطأ أثناء الحفظ",
-        variant: "destructive",
-      });
-    }
+  const handleView = (record: Record) => {
+    setViewingRecord(record);
   };
 
   const handleEdit = (record: Record) => {
-    setEditingRecord(record);
-    // Scroll to top to see the form
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setLocation(`/data-entry?edit=${record.id}`);
   };
 
-  const handleDelete = (id: string) => {
-    setDeleteId(id);
-  };
-
-  const confirmDelete = async () => {
-    if (deleteId) {
-      try {
-        await deleteMutation.mutateAsync(deleteId);
-      } catch (error: any) {
-        toast({
-          title: "خطأ",
-          description: error.message || "حدث خطأ أثناء الحذف",
-          variant: "destructive",
-        });
-      }
-    }
-  };
-
-  const handleResetFilters = () => {
+  const clearFilters = () => {
     setSearchQuery("");
     setFilterGovernorate("");
     setFilterRank("");
@@ -196,106 +121,79 @@ export default function SearchPage() {
     setFilterEndDate("");
   };
 
-  const hasActiveFilters = searchQuery || filterGovernorate || filterRank || filterOffice || filterPoliceStation || filterStartDate || filterEndDate;
-
-  if (isLoading) {
-    return (
-      <div className="container mx-auto max-w-7xl px-6 py-8" dir="rtl">
-        <div className="h-8 w-48 rounded bg-muted mb-4 animate-pulse"></div>
-        <div className="h-64 rounded-lg bg-muted animate-pulse"></div>
-      </div>
-    );
-  }
+  const hasActiveFilters = searchQuery || filterGovernorate || filterRank || 
+    filterOffice || filterPoliceStation || filterStartDate || filterEndDate;
 
   return (
     <div className="container mx-auto max-w-7xl px-6 py-8" dir="rtl">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold" data-testid="title-page">
-          البحث والاستعلام
-        </h1>
+      {/* Back Button */}
+      <div className="mb-6">
         <Link href="/">
-          <Button variant="outline" data-testid="button-back">
-            <ArrowRight className="ml-2 h-4 w-4" />
+          <Button variant="ghost" className="gap-2" data-testid="button-back-home">
+            <ArrowRight className="h-4 w-4" />
             العودة للصفحة الرئيسية
           </Button>
         </Link>
       </div>
 
-      {/* Form */}
-      <Card className="mb-6" data-testid="card-form">
-        <CardHeader>
-          <CardTitle data-testid="title-form">
-            {editingRecord ? "تعديل السجل" : "إضافة سجل جديد"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <RecordForm
-            onSubmit={handleSubmit}
-            record={editingRecord || undefined}
-            onCancel={() => setEditingRecord(null)}
-          />
-        </CardContent>
-      </Card>
+      {/* Page Title */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">الاستعلام والبحث</h1>
+        <p className="mt-2 text-gray-600">البحث عن البلاغات والقيود المسجلة</p>
+      </div>
 
       {/* Search and Filters */}
-      <Card className="mb-6" data-testid="card-search">
+      <Card className="mb-8" data-testid="card-search-filters">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle data-testid="title-search">البحث والتصفية</CardTitle>
-            {hasActiveFilters && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleResetFilters}
-                data-testid="button-reset-filters"
-              >
-                <X className="ml-1 h-4 w-4" />
-                مسح الفلاتر
-              </Button>
-            )}
-          </div>
+          <CardTitle className="text-xl">البحث والتصفية</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Basic Search */}
-          <div className="flex gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <CardContent className="space-y-6">
+          {/* Text Search */}
+          <div className="space-y-2">
+            <Label htmlFor="search" className="text-base font-semibold">البحث السريع</Label>
+            <div className="relative">
+              <Search className="absolute right-3 top-3 h-4 w-4 text-gray-400" />
               <Input
+                id="search"
+                type="text"
                 placeholder="ابحث برقم السجل، الاسم، رقم الصادر، أو الرقم العسكري..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pr-10"
-                data-testid="input-search"
+                data-testid="input-search-records"
               />
             </div>
-            <Button onClick={handleSearch} data-testid="button-search">
-              <Search className="ml-2 h-4 w-4" />
-              بحث
-            </Button>
           </div>
 
           {/* Advanced Filters Toggle */}
           <Collapsible open={showAdvancedFilters} onOpenChange={setShowAdvancedFilters}>
             <CollapsibleTrigger asChild>
-              <Button variant="outline" className="w-full" data-testid="button-toggle-filters">
-                <Filter className="ml-2 h-4 w-4" />
-                {showAdvancedFilters ? "إخفاء الفلاتر المتقدمة" : "إظهار الفلاتر المتقدمة"}
+              <Button 
+                variant="outline" 
+                className="w-full justify-between"
+                data-testid="button-toggle-filters"
+              >
+                <span className="flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  الفلاتر المتقدمة
+                </span>
+                {showAdvancedFilters ? <X className="h-4 w-4" /> : <Filter className="h-4 w-4" />}
               </Button>
             </CollapsibleTrigger>
-            <CollapsibleContent className="mt-4 space-y-4" data-testid="section-advanced-filters">
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <CollapsibleContent className="mt-6 space-y-4">
+              {/* Filter Grid */}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {/* Governorate Filter */}
                 <div className="space-y-2">
-                  <Label htmlFor="filter-governorate" data-testid="label-filter-governorate">المحافظة</Label>
+                  <Label htmlFor="filter-governorate">المحافظة</Label>
                   <Select value={filterGovernorate} onValueChange={setFilterGovernorate}>
                     <SelectTrigger id="filter-governorate" data-testid="select-filter-governorate">
-                      <SelectValue placeholder="جميع المحافظات" />
+                      <SelectValue placeholder="اختر المحافظة" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="" data-testid="option-governorate-all">جميع المحافظات</SelectItem>
+                      <SelectItem value="all">الكل</SelectItem>
                       {uniqueGovernorates.map((gov) => (
-                        <SelectItem key={gov} value={gov} data-testid={`option-governorate-${gov}`}>
+                        <SelectItem key={gov} value={gov}>
                           {gov}
                         </SelectItem>
                       ))}
@@ -305,15 +203,15 @@ export default function SearchPage() {
 
                 {/* Rank Filter */}
                 <div className="space-y-2">
-                  <Label htmlFor="filter-rank" data-testid="label-filter-rank">الرتبة</Label>
+                  <Label htmlFor="filter-rank">الرتبة</Label>
                   <Select value={filterRank} onValueChange={setFilterRank}>
                     <SelectTrigger id="filter-rank" data-testid="select-filter-rank">
-                      <SelectValue placeholder="جميع الرتب" />
+                      <SelectValue placeholder="اختر الرتبة" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="" data-testid="option-rank-all">جميع الرتب</SelectItem>
+                      <SelectItem value="all">الكل</SelectItem>
                       {uniqueRanks.map((rank) => (
-                        <SelectItem key={rank} value={rank} data-testid={`option-rank-${rank}`}>
+                        <SelectItem key={rank} value={rank}>
                           {rank}
                         </SelectItem>
                       ))}
@@ -323,15 +221,15 @@ export default function SearchPage() {
 
                 {/* Office Filter */}
                 <div className="space-y-2">
-                  <Label htmlFor="filter-office" data-testid="label-filter-office">المكتب</Label>
+                  <Label htmlFor="filter-office">المكتب</Label>
                   <Select value={filterOffice} onValueChange={setFilterOffice}>
                     <SelectTrigger id="filter-office" data-testid="select-filter-office">
-                      <SelectValue placeholder="جميع المكاتب" />
+                      <SelectValue placeholder="اختر المكتب" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="" data-testid="option-office-all">جميع المكاتب</SelectItem>
+                      <SelectItem value="all">الكل</SelectItem>
                       {uniqueOffices.map((office) => (
-                        <SelectItem key={office} value={office} data-testid={`option-office-${office}`}>
+                        <SelectItem key={office} value={office}>
                           {office}
                         </SelectItem>
                       ))}
@@ -341,15 +239,15 @@ export default function SearchPage() {
 
                 {/* Police Station Filter */}
                 <div className="space-y-2">
-                  <Label htmlFor="filter-station" data-testid="label-filter-station">المخفر</Label>
+                  <Label htmlFor="filter-policestation">المخفر</Label>
                   <Select value={filterPoliceStation} onValueChange={setFilterPoliceStation}>
-                    <SelectTrigger id="filter-station" data-testid="select-filter-station">
-                      <SelectValue placeholder="جميع المخافر" />
+                    <SelectTrigger id="filter-policestation" data-testid="select-filter-policestation">
+                      <SelectValue placeholder="اختر المخفر" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="" data-testid="option-station-all">جميع المخافر</SelectItem>
+                      <SelectItem value="all">الكل</SelectItem>
                       {uniquePoliceStations.map((station) => (
-                        <SelectItem key={station} value={station} data-testid={`option-station-${station}`}>
+                        <SelectItem key={station} value={station}>
                           {station}
                         </SelectItem>
                       ))}
@@ -359,7 +257,7 @@ export default function SearchPage() {
 
                 {/* Start Date Filter */}
                 <div className="space-y-2">
-                  <Label htmlFor="filter-start-date" data-testid="label-filter-start-date">من تاريخ</Label>
+                  <Label htmlFor="filter-start-date">من تاريخ</Label>
                   <Input
                     id="filter-start-date"
                     type="date"
@@ -371,7 +269,7 @@ export default function SearchPage() {
 
                 {/* End Date Filter */}
                 <div className="space-y-2">
-                  <Label htmlFor="filter-end-date" data-testid="label-filter-end-date">إلى تاريخ</Label>
+                  <Label htmlFor="filter-end-date">إلى تاريخ</Label>
                   <Input
                     id="filter-end-date"
                     type="date"
@@ -381,57 +279,139 @@ export default function SearchPage() {
                   />
                 </div>
               </div>
+
+              {/* Clear Filters Button */}
+              {hasActiveFilters && (
+                <div className="flex justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={clearFilters}
+                    className="gap-2"
+                    data-testid="button-clear-filters"
+                  >
+                    <X className="h-4 w-4" />
+                    مسح جميع الفلاتر
+                  </Button>
+                </div>
+              )}
             </CollapsibleContent>
           </Collapsible>
-
-          {/* Results Count */}
-          <div className="text-sm text-muted-foreground" data-testid="text-results-count">
-            {hasActiveFilters ? (
-              <span>عدد النتائج: <strong>{filteredRecords.length}</strong> من أصل {records.length}</span>
-            ) : (
-              <span>إجمالي السجلات: <strong>{records.length}</strong></span>
-            )}
-          </div>
         </CardContent>
       </Card>
 
-      {/* Results Table */}
-      <Card data-testid="card-results">
+      {/* Results */}
+      <Card data-testid="card-search-results">
         <CardHeader>
-          <CardTitle data-testid="title-results">النتائج</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xl">نتائج البحث</CardTitle>
+            <div className="text-sm text-muted-foreground" data-testid="text-results-count">
+              عدد النتائج: {filteredRecords.length} من {records.length}
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          {filteredRecords.length === 0 ? (
-            <div className="py-12 text-center text-muted-foreground" data-testid="text-no-results">
-              {hasActiveFilters ? "لا توجد نتائج تطابق معايير البحث" : "لا توجد سجلات في النظام"}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <div className="mb-2 text-lg font-semibold">جاري التحميل...</div>
+                <div className="text-sm text-muted-foreground">يرجى الانتظار</div>
+              </div>
+            </div>
+          ) : filteredRecords.length === 0 ? (
+            <div className="flex items-center justify-center py-12" data-testid="empty-state">
+              <div className="text-center">
+                <div className="mb-2 text-lg font-semibold">لا توجد نتائج</div>
+                <div className="text-sm text-muted-foreground">
+                  {hasActiveFilters 
+                    ? "لم يتم العثور على نتائج مطابقة للبحث. جرب تعديل معايير البحث."
+                    : "لا توجد سجلات في النظام حالياً."}
+                </div>
+              </div>
             </div>
           ) : (
             <DataTable
               records={filteredRecords}
               onEdit={handleEdit}
-              onDelete={handleDelete}
+              onDelete={() => {
+                toast({
+                  title: "تنبيه",
+                  description: "الحذف غير متاح في صفحة الاستعلام. يرجى استخدام صفحة إدخال البيانات.",
+                  variant: "default",
+                });
+              }}
+              viewOnly={true}
             />
           )}
         </CardContent>
       </Card>
 
-      {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent dir="rtl" data-testid="dialog-delete">
-          <AlertDialogHeader>
-            <AlertDialogTitle data-testid="title-delete">هل أنت متأكد؟</AlertDialogTitle>
-            <AlertDialogDescription data-testid="text-delete">
-              هذا الإجراء لا يمكن التراجع عنه. سيتم حذف السجل نهائياً.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-delete">إلغاء</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} data-testid="button-confirm-delete">
-              حذف
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* View Record Dialog */}
+      <Dialog open={!!viewingRecord} onOpenChange={(open) => !open && setViewingRecord(null)}>
+        <DialogContent className="max-w-3xl" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>تفاصيل السجل</DialogTitle>
+          </DialogHeader>
+          {viewingRecord && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">رقم السجل</Label>
+                  <div className="font-semibold">{viewingRecord.recordNumber}</div>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">رقم الصادر</Label>
+                  <div className="font-semibold">{viewingRecord.outgoingNumber}</div>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">الرقم العسكري</Label>
+                  <div className="font-semibold">{viewingRecord.militaryNumber}</div>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">تاريخ الجولة</Label>
+                  <div className="font-semibold">
+                    {viewingRecord.tourDate 
+                      ? format(new Date(viewingRecord.tourDate), "dd/MM/yyyy", { locale: ar })
+                      : "-"}
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <Label className="text-muted-foreground">الاسم الكامل</Label>
+                <div className="font-semibold">
+                  {`${viewingRecord.firstName} ${viewingRecord.secondName} ${viewingRecord.thirdName} ${viewingRecord.fourthName}`}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">الرتبة</Label>
+                  <div className="font-semibold">{viewingRecord.rank}</div>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">المحافظة</Label>
+                  <div className="font-semibold">{viewingRecord.governorate}</div>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">المكتب</Label>
+                  <div className="font-semibold">{viewingRecord.office}</div>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">المخفر</Label>
+                  <div className="font-semibold">{viewingRecord.policeStation}</div>
+                </div>
+              </div>
+              
+              {viewingRecord.recordedNotes && (
+                <div>
+                  <Label className="text-muted-foreground">الملاحظات المدونة</Label>
+                  <div className="font-semibold">{viewingRecord.recordedNotes}</div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
