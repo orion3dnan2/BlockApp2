@@ -9,27 +9,27 @@ export default function Dashboard() {
     { 
       title: "تقارير", 
       icon: FileText, 
-      path: "/reports",
+      path: "/blocks/reports",
     },
     { 
       title: "استعلام", 
       icon: Search, 
-      path: "/search",
+      path: "/blocks/search",
     },
     { 
       title: "إدخال البيانات", 
       icon: FileInput, 
-      path: "/data-entry",
+      path: "/blocks/data-entry",
     },
     { 
       title: "المستخدمين", 
       icon: Users, 
-      path: "/users",
+      path: "/blocks/users",
     },
     { 
       title: "استيراد", 
       icon: Database, 
-      path: "/import",
+      path: "/blocks/import",
     },
   ];
 
