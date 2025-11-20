@@ -10,12 +10,13 @@ interface DataTableProps {
   records: Record[];
   onEdit: (record: Record) => void;
   onDelete: (id: string) => void;
+  viewOnly?: boolean;
 }
 
 type SortField = keyof Record | null;
 type SortDirection = "asc" | "desc";
 
-export default function DataTable({ records, onEdit, onDelete }: DataTableProps) {
+export default function DataTable({ records, onEdit, onDelete, viewOnly = false }: DataTableProps) {
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
@@ -159,15 +160,17 @@ export default function DataTable({ records, onEdit, onDelete }: DataTableProps)
             <TableHead className="text-right" data-testid="header-notes">
               الملاحظات المدونة
             </TableHead>
-            <TableHead className="text-center" data-testid="header-actions">
-              الإجراءات
-            </TableHead>
+            {!viewOnly && (
+              <TableHead className="text-center" data-testid="header-actions">
+                الإجراءات
+              </TableHead>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>
           {sortedRecords.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={11} className="h-24 text-center" data-testid="text-no-records">
+              <TableCell colSpan={viewOnly ? 10 : 11} className="h-24 text-center" data-testid="text-no-records">
                 لا توجد سجلات
               </TableCell>
             </TableRow>
@@ -204,26 +207,28 @@ export default function DataTable({ records, onEdit, onDelete }: DataTableProps)
                 <TableCell className="max-w-xs truncate" data-testid={`cell-notes-${index}`}>
                   {record.recordedNotes || "-"}
                 </TableCell>
-                <TableCell className="text-center">
-                  <div className="flex justify-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onEdit(record)}
-                      data-testid={`button-edit-${index}`}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDelete(record.id)}
-                      data-testid={`button-delete-${index}`}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </TableCell>
+                {!viewOnly && (
+                  <TableCell className="text-center">
+                    <div className="flex justify-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEdit(record)}
+                        data-testid={`button-edit-${index}`}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onDelete(record.id)}
+                        data-testid={`button-delete-${index}`}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                )}
               </TableRow>
             ))
           )}

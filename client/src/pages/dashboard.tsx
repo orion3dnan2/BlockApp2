@@ -17,15 +17,14 @@ export default function Dashboard() {
       path: "/search",
     },
     { 
+      title: "إدخال البيانات", 
+      icon: FileInput, 
+      path: "/data-entry",
+    },
+    { 
       title: "المستخدمين", 
       icon: Users, 
       path: "/users",
-    },
-    { 
-      title: "إدخال البيانات", 
-      icon: FileInput, 
-      path: "/",
-      onClick: () => setLocation("/search"),
     },
     { 
       title: "استيراد", 
@@ -60,7 +59,7 @@ export default function Dashboard() {
             <Card
               key={module.title}
               className="flex h-32 w-32 flex-shrink-0 cursor-pointer flex-col items-center justify-center gap-3 border border-blue-200/50 bg-white/40 backdrop-blur-sm transition-all hover:bg-white/60 hover:shadow-xl active:scale-95"
-              onClick={module.onClick || (() => setLocation(module.path))}
+              onClick={() => setLocation(module.path)}
               data-testid={`card-module-${module.title}`}
             >
               <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100/50 transition-colors hover:bg-blue-200/70">

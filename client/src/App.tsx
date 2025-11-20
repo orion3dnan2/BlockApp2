@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Header, { Footer } from "@/components/Header";
 import Dashboard from "@/pages/dashboard";
 import SearchPage from "@/pages/search";
+import DataEntryPage from "@/pages/data-entry";
 import ReportsPage from "@/pages/reports";
 import UsersPage from "@/pages/users";
 import LoginPage from "@/pages/login";
@@ -39,6 +40,11 @@ function Router() {
       <Route path="/search">
         <ProtectedLayout>
           <SearchPage />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/data-entry">
+        <ProtectedLayout>
+          <DataEntryPage />
         </ProtectedLayout>
       </Route>
       <Route path="/reports">
