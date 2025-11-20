@@ -13,6 +13,7 @@ export interface AuthRequest extends Request {
     id: string;
     username: string;
     displayName: string;
+    role: "admin" | "supervisor" | "user";
   };
 }
 
@@ -24,13 +25,13 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return await bcrypt.compare(password, hash);
 }
 
-export function generateToken(userId: string, username: string, displayName: string): string {
-  return jwt.sign({ id: userId, username, displayName }, JWT_SECRET, { expiresIn: "7d" });
+export function generateToken(userId: string, username: string, displayName: string, role: "admin" | "supervisor" | "user"): string {
+  return jwt.sign({ id: userId, username, displayName, role }, JWT_SECRET, { expiresIn: "7d" });
 }
 
-export function verifyToken(token: string): { id: string; username: string; displayName: string } | null {
+export function verifyToken(token: string): { id: string; username: string; displayName: string; role: "admin" | "supervisor" | "user" } | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as { id: string; username: string; displayName: string };
+    return jwt.verify(token, JWT_SECRET) as { id: string; username: string; displayName: string; role: "admin" | "supervisor" | "user" };
   } catch {
     return null;
   }
@@ -50,5 +51,29 @@ export function authenticateToken(req: AuthRequest, res: Response, next: NextFun
   }
 
   req.user = user;
+  next();
+}
+
+export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {
+  if (!req.user) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ message: "Admin access required" });
+  }
+
+  next();
+}
+
+export function requireAdminOrSupervisor(req: AuthRequest, res: Response, next: NextFunction) {
+  if (!req.user) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+
+  if (req.user.role !== "admin" && req.user.role !== "supervisor") {
+    return res.status(403).json({ message: "Admin or supervisor access required" });
+  }
+
   next();
 }

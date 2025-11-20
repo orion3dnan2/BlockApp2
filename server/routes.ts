@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { hashPassword, verifyPassword, generateToken, authenticateToken, type AuthRequest } from "./auth";
+import { hashPassword, verifyPassword, generateToken, authenticateToken, requireAdmin, requireAdminOrSupervisor, type AuthRequest } from "./auth";
 import { insertUserSchema, insertRecordSchema, type InsertUser } from "@shared/schema";
 import { z } from "zod";
 
@@ -24,12 +24,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         role: "user",
       });
 
-      const token = generateToken(user.id, user.username, user.displayName);
+      const token = generateToken(user.id, user.username, user.displayName, user.role as "admin" | "supervisor" | "user");
       res.json({
         user: {
           id: user.id,
           username: user.username,
           displayName: user.displayName,
+          role: user.role,
         },
         token,
       });
@@ -59,12 +60,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      const token = generateToken(user.id, user.username, user.displayName);
+      const token = generateToken(user.id, user.username, user.displayName, user.role as "admin" | "supervisor" | "user");
       res.json({
         user: {
           id: user.id,
           username: user.username,
           displayName: user.displayName,
+          role: user.role,
         },
         token,
       });
@@ -89,7 +91,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/users", authenticateToken, async (req: AuthRequest, res) => {
+  app.post("/api/users", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const validated = insertUserSchema.parse(req.body);
 
@@ -116,7 +118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/users/:id", authenticateToken, async (req: AuthRequest, res) => {
+  app.put("/api/users/:id", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
     try {
       // Create validation schema for updates (all fields optional)
       const updateUserSchema = z.object({
@@ -156,7 +158,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/users/:id", authenticateToken, async (req: AuthRequest, res) => {
+  app.delete("/api/users/:id", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
     try {
       // Prevent user from deleting themselves
       if (req.user?.id === req.params.id) {
@@ -221,7 +223,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/records", authenticateToken, async (req: AuthRequest, res) => {
+  app.post("/api/records", authenticateToken, requireAdminOrSupervisor, async (req: AuthRequest, res) => {
     try {
       const data = insertRecordSchema.parse(req.body);
       const record = await storage.createRecord(data);
@@ -234,7 +236,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/records/:id", authenticateToken, async (req: AuthRequest, res) => {
+  app.put("/api/records/:id", authenticateToken, requireAdminOrSupervisor, async (req: AuthRequest, res) => {
     try {
       const updateSchema = insertRecordSchema.partial();
       const data = updateSchema.parse(req.body);
@@ -256,7 +258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/records/:id", authenticateToken, async (req: AuthRequest, res) => {
+  app.delete("/api/records/:id", authenticateToken, requireAdminOrSupervisor, async (req: AuthRequest, res) => {
     try {
       const success = await storage.deleteRecord(req.params.id);
       if (!success) {
