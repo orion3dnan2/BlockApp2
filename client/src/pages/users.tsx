@@ -12,24 +12,56 @@ import { z } from "zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Users as UsersIcon, Plus, Pencil, Trash2, ArrowRight, Search } from "lucide-react";
+import { Users as UsersIcon, Plus, Pencil, Trash2, ArrowRight, Search, Shield } from "lucide-react";
 import { Link } from "wouter";
 import type { User } from "@shared/schema";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 // Define user type without password
 type UserWithoutPassword = Omit<User, "password">;
+
+// Helper function to translate roles
+const getRoleLabel = (role: string) => {
+  switch (role) {
+    case "admin":
+      return "مدير";
+    case "supervisor":
+      return "مشرف";
+    case "user":
+      return "مستخدم";
+    default:
+      return role;
+  }
+};
+
+// Helper function to get role badge variant
+const getRoleBadgeVariant = (role: string): "default" | "secondary" | "destructive" => {
+  switch (role) {
+    case "admin":
+      return "destructive";
+    case "supervisor":
+      return "default";
+    case "user":
+      return "secondary";
+    default:
+      return "secondary";
+  }
+};
 
 // Form validation schemas
 const createUserSchema = z.object({
   username: z.string().min(3, "اسم المستخدم يجب أن يكون 3 أحرف على الأقل"),
   password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل"),
   displayName: z.string().min(2, "الاسم الكامل يجب أن يكون حرفين على الأقل"),
+  role: z.enum(["admin", "supervisor", "user"]).default("user"),
 });
 
 const updateUserSchema = z.object({
   username: z.string().min(3, "اسم المستخدم يجب أن يكون 3 أحرف على الأقل").optional(),
   password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل").optional(),
   displayName: z.string().min(2, "الاسم الكامل يجب أن يكون حرفين على الأقل").optional(),
+  role: z.enum(["admin", "supervisor", "user"]).optional(),
 });
 
 type CreateUserFormData = z.infer<typeof createUserSchema>;
@@ -54,6 +86,7 @@ export default function UsersPage() {
       username: "",
       password: "",
       displayName: "",
+      role: "user",
     },
   });
 
@@ -64,6 +97,7 @@ export default function UsersPage() {
       username: "",
       password: "",
       displayName: "",
+      role: "user",
     },
   });
 
@@ -161,6 +195,7 @@ export default function UsersPage() {
       username: user.username,
       displayName: user.displayName,
       password: "",
+      role: user.role as "admin" | "supervisor" | "user",
     });
     setIsDialogOpen(true);
   };
@@ -181,6 +216,7 @@ export default function UsersPage() {
     if (data.username && data.username !== editingUser.username) cleanData.username = data.username;
     if (data.displayName && data.displayName !== editingUser.displayName) cleanData.displayName = data.displayName;
     if (data.password) cleanData.password = data.password;
+    if (data.role && data.role !== editingUser.role) cleanData.role = data.role;
 
     if (Object.keys(cleanData).length === 0) {
       toast({
@@ -305,6 +341,7 @@ export default function UsersPage() {
                   <TableRow>
                     <TableHead className="text-right" data-testid="header-username">اسم المستخدم</TableHead>
                     <TableHead className="text-right" data-testid="header-displayname">الاسم الكامل</TableHead>
+                    <TableHead className="text-right" data-testid="header-role">الصلاحية</TableHead>
                     <TableHead className="text-right" data-testid="header-actions">الإجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -316,6 +353,12 @@ export default function UsersPage() {
                       </TableCell>
                       <TableCell data-testid={`cell-displayname-${user.id}`}>
                         {user.displayName}
+                      </TableCell>
+                      <TableCell data-testid={`cell-role-${user.id}`}>
+                        <Badge variant={getRoleBadgeVariant(user.role)} className="gap-1">
+                          <Shield className="h-3 w-3" />
+                          {getRoleLabel(user.role)}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
@@ -407,6 +450,29 @@ export default function UsersPage() {
                   )}
                 />
 
+                <FormField
+                  control={updateForm.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel data-testid="label-role">الصلاحية</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-role">
+                            <SelectValue placeholder="اختر الصلاحية" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="admin" data-testid="option-admin">مدير</SelectItem>
+                          <SelectItem value="supervisor" data-testid="option-supervisor">مشرف</SelectItem>
+                          <SelectItem value="user" data-testid="option-user">مستخدم</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} data-testid="button-cancel">
                     إلغاء
@@ -457,6 +523,29 @@ export default function UsersPage() {
                       <FormControl>
                         <Input type="password" {...field} data-testid="input-password" />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={createForm.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel data-testid="label-role">الصلاحية</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-role">
+                            <SelectValue placeholder="اختر الصلاحية" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="admin" data-testid="option-admin">مدير</SelectItem>
+                          <SelectItem value="supervisor" data-testid="option-supervisor">مشرف</SelectItem>
+                          <SelectItem value="user" data-testid="option-user">مستخدم</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

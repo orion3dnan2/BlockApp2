@@ -25,7 +25,7 @@ Preferred communication style: Simple, everyday language.
 - **Search Page:** Read-only query interface with advanced filters and a data table.
 - **Data Entry Page:** Dedicated interface for adding and editing records with CRUD operations.
 - **Reports Page:** Enhanced statistics and analytics dashboard with comprehensive filtering (date, governorate, police station, action type, rank, person name), professional print layout, and distribution analysis with percentages.
-- **Users Page:** Comprehensive user management (create, update, delete, search).
+- **Users Page:** Comprehensive user management (create, update, delete, search) with role-based permissions system (admin, supervisor, user).
 - **Login Page:** Tabbed authentication (login/register) with form validation.
 
 ### Backend Architecture
@@ -47,7 +47,7 @@ Preferred communication style: Simple, everyday language.
 **Database:** PostgreSQL (via Neon serverless) as the primary database, with Drizzle ORM for type-safe operations.
 
 **Schema Design:**
-- **Users Table:** `id` (UUID), `username` (unique), `password` (hashed), `displayName`.
+- **Users Table:** `id` (UUID), `username` (unique), `password` (hashed), `displayName`, `role` (admin/supervisor/user, default: user).
 - **Records Table:** `id` (UUID), `recordNumber` (serial, unique, auto-generated), `outgoingNumber` (non-unique, allows duplicates), `militaryNumber` (optional), `actionType` (optional, type of procedure), `ports` (optional), `recordedNotes` (optional), `firstName`, `secondName`, `thirdName`, `fourthName`, `tourDate`, `rank` (16 ranks from جندي to فريق أول), `governorate`, `office` (optional, not displayed in form), `policeStation`, `createdAt`.
 
 **Form Field Order (Data Entry Page) - Horizontal Layout:**
