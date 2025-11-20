@@ -53,6 +53,7 @@ export default function RecordForm({ record, onSubmit, onCancel }: RecordFormPro
       ? {
           outgoingNumber: record.outgoingNumber || "",
           militaryNumber: record.militaryNumber || "",
+          actionType: (record as any).actionType || "",
           ports: (record as any).ports || "",
           recordedNotes: record.recordedNotes || "",
           firstName: record.firstName || "",
@@ -67,6 +68,7 @@ export default function RecordForm({ record, onSubmit, onCancel }: RecordFormPro
       : {
           outgoingNumber: "",
           militaryNumber: "",
+          actionType: "",
           ports: "",
           recordedNotes: "",
           firstName: "",
@@ -96,8 +98,8 @@ export default function RecordForm({ record, onSubmit, onCancel }: RecordFormPro
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6" dir="rtl">
-        {/* Row 1: رقم الصادر، الرقم العسكري، الرتبة */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {/* Row 1: رقم الصادر، الرقم العسكري */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <FormField
             control={form.control}
             name="outgoingNumber"
@@ -120,6 +122,23 @@ export default function RecordForm({ record, onSubmit, onCancel }: RecordFormPro
                 <FormLabel className="font-semibold">الرقم العسكري</FormLabel>
                 <FormControl>
                   <Input {...field} value={field.value || ""} data-testid="input-military-number" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Row 1.5: نوع الاجراء في حقه، الرتبة */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="actionType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="font-semibold">نوع الاجراء في حقه</FormLabel>
+                <FormControl>
+                  <Input {...field} value={field.value || ""} data-testid="input-action-type" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

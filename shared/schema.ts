@@ -15,6 +15,7 @@ export const records = pgTable("records", {
   recordNumber: serial("record_number").notNull().unique(),
   outgoingNumber: text("outgoing_number").notNull(),
   militaryNumber: text("military_number"),
+  actionType: text("action_type"),
   ports: text("ports"),
   recordedNotes: text("recorded_notes"),
   firstName: text("first_name").notNull(),
