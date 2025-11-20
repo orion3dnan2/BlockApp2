@@ -9,23 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { insertRecordSchema } from "@shared/schema";
 import type { Record } from "@shared/schema";
 
-const formSchema = z.object({
-  outgoingNumber: z.string().min(1, "رقم الصادر مطلوب"),
-  militaryNumber: z.string().nullish().transform(val => val || null),
-  ports: z.string().nullish().transform(val => val || null),
-  recordedNotes: z.string().nullish().transform(val => val || null),
-  firstName: z.string().min(1, "الاسم الأول مطلوب"),
-  secondName: z.string().min(1, "الاسم الثاني مطلوب"),
-  thirdName: z.string().min(1, "الاسم الثالث مطلوب"),
-  fourthName: z.string().min(1, "الاسم الرابع مطلوب"),
-  tourDate: z.date({
-    required_error: "تاريخ الجولة مطلوب",
-    invalid_type_error: "تاريخ غير صحيح",
-  }),
-  rank: z.string().min(1, "الرتبة مطلوبة"),
-  governorate: z.string().min(1, "المحافظة مطلوبة"),
-  policeStation: z.string().min(1, "المخفر مطلوب"),
-});
+// Use shared insertRecordSchema and extend for UI-specific validation
+const formSchema = insertRecordSchema.omit({ office: true });
 
 type FormValues = z.infer<typeof formSchema>;
 
