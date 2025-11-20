@@ -11,7 +11,8 @@ import type { Record } from "@shared/schema";
 
 const formSchema = z.object({
   outgoingNumber: z.string().min(1, "رقم الصادر مطلوب"),
-  militaryNumber: z.string().min(1, "الرقم العسكري مطلوب"),
+  militaryNumber: z.string().optional().nullable(),
+  ports: z.string().optional().nullable(),
   recordedNotes: z.string().optional().nullable(),
   firstName: z.string().min(1, "الاسم الأول مطلوب"),
   secondName: z.string().min(1, "الاسم الثاني مطلوب"),
@@ -51,6 +52,7 @@ export default function RecordForm({ record, onSubmit, onCancel }: RecordFormPro
       ? {
           outgoingNumber: record.outgoingNumber || "",
           militaryNumber: record.militaryNumber || "",
+          ports: (record as any).ports || "",
           recordedNotes: record.recordedNotes || "",
           firstName: record.firstName || "",
           secondName: record.secondName || "",
@@ -65,6 +67,7 @@ export default function RecordForm({ record, onSubmit, onCancel }: RecordFormPro
       : {
           outgoingNumber: "",
           militaryNumber: "",
+          ports: "",
           recordedNotes: "",
           firstName: "",
           secondName: "",
@@ -114,9 +117,9 @@ export default function RecordForm({ record, onSubmit, onCancel }: RecordFormPro
             name="militaryNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-red-700 font-semibold">الرقم العسكري *</FormLabel>
+                <FormLabel className="text-red-700 font-semibold">الرقم العسكري</FormLabel>
                 <FormControl>
-                  <Input {...field} className="bg-white" data-testid="input-military-number" />
+                  <Input {...field} value={field.value || ""} className="bg-white" data-testid="input-military-number" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -125,16 +128,33 @@ export default function RecordForm({ record, onSubmit, onCancel }: RecordFormPro
 
           <FormField
             control={form.control}
+            name="ports"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-red-700 font-semibold">المنافذ</FormLabel>
+                <FormControl>
+                  <Input {...field} value={field.value || ""} className="bg-white" data-testid="input-ports" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Notes Field */}
+        <div>
+          <FormField
+            control={form.control}
             name="recordedNotes"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-red-700 font-semibold">الملاحظات المدونة</FormLabel>
+                <FormLabel className="font-semibold">الملاحظات المدونة</FormLabel>
                 <FormControl>
                   <Textarea
                     {...field}
                     value={field.value || ""}
-                    className="resize-none bg-white"
-                    rows={1}
+                    className="resize-none"
+                    rows={2}
                     data-testid="input-recorded-notes"
                   />
                 </FormControl>

@@ -123,6 +123,12 @@ export default function DataTable({ records, onEdit, onDelete, viewOnly = false 
               الرقم العسكري <SortIcon field="militaryNumber" />
             </TableHead>
             <TableHead 
+              className="text-right"
+              data-testid="header-ports"
+            >
+              المنافذ
+            </TableHead>
+            <TableHead 
               className="text-right cursor-pointer" 
               onClick={() => handleSort("governorate")}
               data-testid="header-governorate"
@@ -170,7 +176,7 @@ export default function DataTable({ records, onEdit, onDelete, viewOnly = false 
         <TableBody>
           {sortedRecords.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={viewOnly ? 10 : 11} className="h-24 text-center" data-testid="text-no-records">
+              <TableCell colSpan={viewOnly ? 11 : 12} className="h-24 text-center" data-testid="text-no-records">
                 لا توجد سجلات
               </TableCell>
             </TableRow>
@@ -187,7 +193,10 @@ export default function DataTable({ records, onEdit, onDelete, viewOnly = false 
                   {getFullName(record)}
                 </TableCell>
                 <TableCell data-testid={`cell-military-${index}`}>
-                  {record.militaryNumber}
+                  {record.militaryNumber || "-"}
+                </TableCell>
+                <TableCell data-testid={`cell-ports-${index}`}>
+                  {(record as any).ports || "-"}
                 </TableCell>
                 <TableCell data-testid={`cell-governorate-${index}`}>
                   {record.governorate}
