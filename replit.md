@@ -1,12 +1,26 @@
-# Block System - Administrative Management System
+# نظام إدارة الرقابة والتفتيش - Oversight and Inspection Management System
 
 ## Overview
 
-Block System is an Arabic-first administrative management application for handling reports and records (البلاغات والقيود). It's a full-stack web application with a React frontend and Express backend, designed with an RTL (right-to-left) layout. The system provides comprehensive record management, including search, filtering, CRUD operations, and user authentication, aiming to be an efficient tool for administrative tasks.
+نظام إدارة الرقابة والتفتيش (Oversight and Inspection Management System) is an Arabic-first administrative management application for handling reports and records (البلاغات والقيود). It's a full-stack web application with a React frontend and Express backend, designed with an RTL (right-to-left) layout. The system features a two-tab home interface separating administrative systems and the blocks system, providing comprehensive record management, including search, filtering, CRUD operations, user authentication, and role-based access control.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Recent Changes
+
+**November 20, 2025:**
+- Created two-tab home page with "نظام إداري" (placeholder) and "نظام البلوكات" (main system)
+- Renamed entire system to "نظام إدارة الرقابة والتفتيش"
+- Restructured all routes under `/blocks/*` namespace:
+  - `/` → Home page with tabs
+  - `/blocks/dashboard` → Dashboard
+  - `/blocks/search` → Search page
+  - `/blocks/data-entry` → Data entry page
+  - `/blocks/reports` → Reports page
+  - `/blocks/users` → Users management
+  - `/blocks/import` → Excel import
 
 ## System Architecture
 
@@ -21,6 +35,9 @@ Preferred communication style: Simple, everyday language.
 **State Management Strategy:** React Query for server state, Context API for authentication, and React hooks for local UI state. `react-hook-form` with Zod handles form state and validation.
 
 **Key Frontend Pages:**
+- **Home Page:** Two-tab interface after login (default tab: "نظام البلوكات"):
+  - **Tab 1 - نظام إداري (Administrative System):** Currently showing placeholder ("قريباً" - Coming Soon).
+  - **Tab 2 - نظام البلوكات (Blocks System):** Displays 6 module cards: لوحة التحكم (Dashboard), البحث (Search), إدخال البيانات (Data Entry), التقارير (Reports), المستخدمين (Users), استيراد (Import).
 - **Dashboard:** Navigation to core modules (Reports, Search, Data Entry, Users, Import).
 - **Search Page:** Read-only query interface with advanced filters and a data table.
 - **Data Entry Page:** Dedicated interface for adding and editing records with CRUD operations.
@@ -103,7 +120,7 @@ After updating the role, the user must log in again to receive a new JWT token w
 **Access:** Admin and Supervisor roles only
 
 **Frontend Implementation:**
-- Located at `/import` route
+- Located at `/blocks/import` route
 - Role-based guard redirects unauthorized users to dashboard
 - Drag-and-drop file upload interface with .xlsx/.xls validation
 - Client-side Excel parsing using `xlsx` library
