@@ -6,20 +6,29 @@ export interface IStorage {
   // User methods
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, data: Partial<InsertUser>): Promise<User | undefined>;
+  deleteUser(id: string): Promise<boolean>;
 
   // Record methods
   getRecords(): Promise<Record[]>;
   getRecordById(id: string): Promise<Record | undefined>;
   searchRecords(filters: {
-    inventoryNumber?: string;
-    registrationNumber?: string;
-    name?: string;
+    recordNumber?: string;
+    outgoingNumber?: string;
+    militaryNumber?: string;
+    firstName?: string;
+    secondName?: string;
+    thirdName?: string;
+    fourthName?: string;
     governorate?: string;
-    region?: string;
+    rank?: string;
+    office?: string;
+    policeStation?: string;
     startDate?: Date;
     endDate?: Date;
-    notes?: string;
+    recordedNotes?: string;
   }): Promise<Record[]>;
   createRecord(record: InsertRecord): Promise<Record>;
   updateRecord(id: string, record: Partial<InsertRecord>): Promise<Record | undefined>;
@@ -38,12 +47,30 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
+  async getUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
       .values(insertUser)
       .returning();
     return user;
+  }
+
+  async updateUser(id: string, data: Partial<InsertUser>): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set(data)
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
   }
 
   // Record methods
@@ -57,45 +84,64 @@ export class DatabaseStorage implements IStorage {
   }
 
   async searchRecords(filters: {
-    inventoryNumber?: string;
-    registrationNumber?: string;
-    name?: string;
+    recordNumber?: string;
+    outgoingNumber?: string;
+    militaryNumber?: string;
+    firstName?: string;
+    secondName?: string;
+    thirdName?: string;
+    fourthName?: string;
     governorate?: string;
-    region?: string;
+    rank?: string;
+    office?: string;
+    policeStation?: string;
     startDate?: Date;
     endDate?: Date;
-    notes?: string;
+    recordedNotes?: string;
   }): Promise<Record[]> {
     const conditions = [];
 
-    if (filters.inventoryNumber) {
-      conditions.push(like(records.inventoryNumber, `%${filters.inventoryNumber}%`));
+    if (filters.recordNumber) {
+      conditions.push(eq(records.recordNumber, parseInt(filters.recordNumber)));
     }
-    if (filters.registrationNumber) {
-      conditions.push(like(records.registrationNumber, `%${filters.registrationNumber}%`));
+    if (filters.outgoingNumber) {
+      conditions.push(like(records.outgoingNumber, `%${filters.outgoingNumber}%`));
     }
-    if (filters.name) {
-      conditions.push(like(records.name, `%${filters.name}%`));
+    if (filters.militaryNumber) {
+      conditions.push(like(records.militaryNumber, `%${filters.militaryNumber}%`));
+    }
+    if (filters.firstName) {
+      conditions.push(like(records.firstName, `%${filters.firstName}%`));
+    }
+    if (filters.secondName) {
+      conditions.push(like(records.secondName, `%${filters.secondName}%`));
+    }
+    if (filters.thirdName) {
+      conditions.push(like(records.thirdName, `%${filters.thirdName}%`));
+    }
+    if (filters.fourthName) {
+      conditions.push(like(records.fourthName, `%${filters.fourthName}%`));
     }
     if (filters.governorate) {
       conditions.push(eq(records.governorate, filters.governorate));
     }
-    if (filters.region) {
-      conditions.push(like(records.region, `%${filters.region}%`));
+    if (filters.rank) {
+      conditions.push(eq(records.rank, filters.rank));
+    }
+    if (filters.office) {
+      conditions.push(eq(records.office, filters.office));
+    }
+    if (filters.policeStation) {
+      conditions.push(eq(records.policeStation, filters.policeStation));
     }
     if (filters.startDate) {
-      conditions.push(gte(records.date, filters.startDate));
+      conditions.push(gte(records.tourDate, filters.startDate));
     }
     if (filters.endDate) {
-      conditions.push(lte(records.date, filters.endDate));
+      conditions.push(lte(records.tourDate, filters.endDate));
     }
-    if (filters.notes) {
-      conditions.push(
-        or(
-          like(records.notes, `%${filters.notes}%`),
-          like(records.additionalNotes, `%${filters.notes}%`)
-        )
-      );
+    if (filters.recordedNotes) {
+      conditions.push(like(records.recordedNotes, `%${filters.recordedNotes}%`));
     }
 
     if (conditions.length === 0) {

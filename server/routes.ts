@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { hashPassword, verifyPassword, generateToken, authenticateToken, type AuthRequest } from "./auth";
-import { insertUserSchema, insertRecordSchema } from "@shared/schema";
+import { insertUserSchema, insertRecordSchema, type InsertUser } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -76,6 +76,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ user: req.user });
   });
 
+  // Users management routes
+  app.get("/api/users", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const allUsers = await storage.getUsers();
+      // Remove password from response
+      const usersWithoutPassword = allUsers.map(({ password, ...user }) => user);
+      res.json(usersWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.put("/api/users/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      // Create validation schema for updates (all fields optional)
+      const updateUserSchema = z.object({
+        username: z.string().min(3, "Username must be at least 3 characters").optional(),
+        password: z.string().min(6, "Password must be at least 6 characters").optional(),
+        displayName: z.string().min(2, "Display name must be at least 2 characters").optional(),
+      });
+      
+      const validated = updateUserSchema.parse(req.body);
+      const updateData: Partial<InsertUser> = {};
+      
+      if (validated.displayName) updateData.displayName = validated.displayName;
+      if (validated.username) updateData.username = validated.username;
+      if (validated.password) {
+        updateData.password = await hashPassword(validated.password);
+      }
+      
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ message: "No fields to update" });
+      }
+      
+      const user = await storage.updateUser(req.params.id, updateData);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Remove password from response
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.delete("/api/users/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      // Prevent user from deleting themselves
+      if (req.user?.id === req.params.id) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+      
+      const success = await storage.deleteUser(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   // Records routes
   app.get("/api/records", authenticateToken, async (req: AuthRequest, res) => {
     try {
@@ -90,14 +157,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const filters: any = {};
 
-      if (req.query.inventoryNumber) filters.inventoryNumber = String(req.query.inventoryNumber);
-      if (req.query.registrationNumber) filters.registrationNumber = String(req.query.registrationNumber);
-      if (req.query.name) filters.name = String(req.query.name);
+      if (req.query.recordNumber) filters.recordNumber = String(req.query.recordNumber);
+      if (req.query.outgoingNumber) filters.outgoingNumber = String(req.query.outgoingNumber);
+      if (req.query.militaryNumber) filters.militaryNumber = String(req.query.militaryNumber);
+      if (req.query.firstName) filters.firstName = String(req.query.firstName);
+      if (req.query.secondName) filters.secondName = String(req.query.secondName);
+      if (req.query.thirdName) filters.thirdName = String(req.query.thirdName);
+      if (req.query.fourthName) filters.fourthName = String(req.query.fourthName);
       if (req.query.governorate) filters.governorate = String(req.query.governorate);
-      if (req.query.region) filters.region = String(req.query.region);
+      if (req.query.rank) filters.rank = String(req.query.rank);
+      if (req.query.office) filters.office = String(req.query.office);
+      if (req.query.policeStation) filters.policeStation = String(req.query.policeStation);
       if (req.query.startDate) filters.startDate = new Date(String(req.query.startDate));
       if (req.query.endDate) filters.endDate = new Date(String(req.query.endDate));
-      if (req.query.notes) filters.notes = String(req.query.notes);
+      if (req.query.recordedNotes) filters.recordedNotes = String(req.query.recordedNotes);
 
       const records = await storage.searchRecords(filters);
       res.json(records);

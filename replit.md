@@ -39,8 +39,9 @@ Preferred communication style: Simple, everyday language.
 
 **Key Frontend Pages**
 - Dashboard: Module navigation grid with cards for Reports, Search, Users, Operations, and Backup
-- Search Page: Advanced filtering interface with data table, CRUD operations
+- Search Page: Advanced filtering interface with comprehensive filters (governorate, rank, office, police station, date range) and data table with CRUD operations
 - Reports Page: Comprehensive statistics and analytics dashboard with date filtering and print support
+- Users Page: Full user management interface with create, update, delete operations and search functionality
 - Login Page: Tabbed authentication (login/register) with form validation
 
 ### Backend Architecture
@@ -61,7 +62,9 @@ Preferred communication style: Simple, everyday language.
 - `/api/auth/register` - User registration
 - `/api/auth/login` - User authentication  
 - `/api/auth/me` - Current user verification
+- `/api/users` - User management (GET all, PUT update, DELETE)
 - `/api/records` - Record CRUD operations with search/filter support
+- `/api/records/search` - Advanced record search with multiple filters
 
 **Data Access Pattern**
 - Repository pattern with IStorage interface
@@ -146,6 +149,47 @@ Preferred communication style: Simple, everyday language.
 - Node.js runtime for production server
 
 ## Recent Changes
+
+### Users Management & Enhanced Search (November 20, 2025)
+**New Features: Complete User Management and Advanced Search Filters**
+
+1. **Users Management Page**
+   - Full CRUD operations for user accounts
+   - Create new users with validation (username min 3 chars, password min 6 chars)
+   - Update user information (username, display name, password optional)
+   - Delete users with protection (cannot delete self)
+   - Real-time search by username or display name
+   - Complete data-testid coverage for automation
+   - Error handling with user-friendly messages
+   - RTL-first Arabic interface
+
+2. **Enhanced Search Page with Advanced Filters**
+   - Collapsible advanced filter panel
+   - Filter by governorate (dropdown with all unique values)
+   - Filter by rank (dropdown with all unique ranks)
+   - Filter by office (dropdown with all unique offices)
+   - Filter by police station (dropdown with all unique stations)
+   - Date range filter (start date - end date)
+   - Combined text search + advanced filters
+   - Real-time results counter
+   - Clear filters button
+   - Optimized with useMemo for performance
+
+3. **Backend Enhancements**
+   - New API endpoints: GET /api/users, PUT /api/users/:id, DELETE /api/users/:id
+   - Zod validation for all user update operations
+   - Password removal from API responses for security
+   - Self-deletion prevention in delete endpoint
+   - Updated searchRecords() to match current schema (recordNumber, outgoingNumber, militaryNumber, etc.)
+   - Support for multiple filter combinations
+
+**Technical Implementation:**
+- React Query for data fetching and mutations
+- Zod schemas for client and server validation
+- shadcn/ui components (Dialog, AlertDialog, Collapsible, Select)
+- Full TypeScript type safety throughout
+- Complete test coverage with data-testids
+- RTL-first design with Arabic localization
 
 ### Reports Page Implementation (November 20, 2025)
 **New Feature: Comprehensive Reports & Analytics Dashboard**

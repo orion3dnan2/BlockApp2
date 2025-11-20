@@ -9,6 +9,7 @@ import Header, { Footer } from "@/components/Header";
 import Dashboard from "@/pages/dashboard";
 import SearchPage from "@/pages/search";
 import ReportsPage from "@/pages/reports";
+import UsersPage from "@/pages/users";
 import LoginPage from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -47,10 +48,7 @@ function Router() {
       </Route>
       <Route path="/users">
         <ProtectedLayout>
-          <div className="container mx-auto max-w-7xl px-6 py-8" dir="rtl">
-            <h2 className="text-2xl font-semibold">المستخدمين</h2>
-            <p className="mt-4 text-muted-foreground">قريباً...</p>
-          </div>
+          <UsersPage />
         </ProtectedLayout>
       </Route>
       <Route path="/operations">
