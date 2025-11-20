@@ -86,7 +86,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4" dir="rtl">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-center text-3xl">Block System</CardTitle>
+          <CardTitle className="text-center text-3xl">نظام إدارة الرقابة والتفتيش</CardTitle>
           <CardDescription className="text-center">
             نظام الإدارة الشامل
           </CardDescription>

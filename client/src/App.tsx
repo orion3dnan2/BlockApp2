@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Header, { Footer } from "@/components/Header";
+import HomePage from "@/pages/home";
 import Dashboard from "@/pages/dashboard";
 import SearchPage from "@/pages/search";
 import DataEntryPage from "@/pages/data-entry";
@@ -35,30 +36,35 @@ function Router() {
       <Route path="/login" component={LoginPage} />
       <Route path="/">
         <ProtectedLayout>
+          <HomePage />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/blocks/dashboard">
+        <ProtectedLayout>
           <Dashboard />
         </ProtectedLayout>
       </Route>
-      <Route path="/search">
+      <Route path="/blocks/search">
         <ProtectedLayout>
           <SearchPage />
         </ProtectedLayout>
       </Route>
-      <Route path="/data-entry">
+      <Route path="/blocks/data-entry">
         <ProtectedLayout>
           <DataEntryPage />
         </ProtectedLayout>
       </Route>
-      <Route path="/reports">
+      <Route path="/blocks/reports">
         <ProtectedLayout>
           <ReportsPage />
         </ProtectedLayout>
       </Route>
-      <Route path="/users">
+      <Route path="/blocks/users">
         <ProtectedLayout>
           <UsersPage />
         </ProtectedLayout>
       </Route>
-      <Route path="/import">
+      <Route path="/blocks/import">
         <ProtectedLayout>
           <ImportPage />
         </ProtectedLayout>

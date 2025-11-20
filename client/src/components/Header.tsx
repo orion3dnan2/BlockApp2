@@ -10,7 +10,7 @@ export default function Header() {
   return (
     <header className="bg-blue-700 text-white shadow-md" dir="rtl">
       <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-3">
-        <h1 className="text-2xl font-bold text-yellow-400">Block System</h1>
+        <h1 className="text-2xl font-bold text-yellow-400">نظام إدارة الرقابة والتفتيش</h1>
         
         <div className="flex items-center gap-2 text-sm">
           <span className="font-semibold">المستخدم :</span>
