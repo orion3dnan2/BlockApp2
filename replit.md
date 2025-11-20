@@ -24,7 +24,7 @@ Preferred communication style: Simple, everyday language.
 - **Dashboard:** Navigation to core modules (Reports, Search, Data Entry, Users, Backup).
 - **Search Page:** Read-only query interface with advanced filters and a data table.
 - **Data Entry Page:** Dedicated interface for adding and editing records with CRUD operations.
-- **Reports Page:** Statistics and analytics dashboard with date filtering and print support.
+- **Reports Page:** Enhanced statistics and analytics dashboard with comprehensive filtering (date, governorate, police station, action type, rank, person name), professional print layout, and distribution analysis with percentages.
 - **Users Page:** Comprehensive user management (create, update, delete, search).
 - **Login Page:** Tabbed authentication (login/register) with form validation.
 
@@ -48,19 +48,19 @@ Preferred communication style: Simple, everyday language.
 
 **Schema Design:**
 - **Users Table:** `id` (UUID), `username` (unique), `password` (hashed), `displayName`.
-- **Records Table:** `id` (UUID), `recordNumber` (serial, unique, auto-generated), `outgoingNumber` (non-unique, allows duplicates), `militaryNumber` (optional), `ports` (optional), `recordedNotes` (optional), `firstName`, `secondName`, `thirdName`, `fourthName`, `tourDate`, `rank`, `governorate`, `office` (optional, not displayed in form), `policeStation`, `createdAt`.
+- **Records Table:** `id` (UUID), `recordNumber` (serial, unique, auto-generated), `outgoingNumber` (non-unique, allows duplicates), `militaryNumber` (optional), `actionType` (optional, type of procedure), `ports` (optional), `recordedNotes` (optional), `firstName`, `secondName`, `thirdName`, `fourthName`, `tourDate`, `rank` (16 ranks from جندي to فريق أول), `governorate`, `office` (optional, not displayed in form), `policeStation`, `createdAt`.
 
-**Form Field Order (Data Entry Page):**
-1. رقم الصادر (Outgoing Number) - required
-2. الرقم العسكري (Military Number) - optional
-3. الاسم (Full Name - 4 parts) - required
-4. الرتبة (Rank) - required
-5. المحافظة (Governorate) - required
-6. المخفر (Police Station) - required
-7. المنافذ (Ports) - optional
-8. تاريخ الجولة (Tour Date) - required
-9. الملاحظات المدونة (Recorded Notes) - optional
-10. Form Actions (مسح - Reset, حفظ - Save)
+**Form Field Order (Data Entry Page) - Horizontal Layout:**
+- Row 1: رقم الصادر، الرقم العسكري (2 fields)
+- Row 2: نوع الاجراء في حقه، الرتبة (2 fields)
+- Row 3: الاسم (4 parts)
+- Row 4: المحافظة، المخفر، المنافذ (3 fields)
+- Row 5: تاريخ الجولة
+- Row 6: الملاحظات المدونة
+- Form Actions: مسح - Reset, حفظ - Save
+
+**Military Ranks (16 total, ordered from lowest to highest):**
+جندي، جندي أول، عريف، رقيب، رقيب أول، وكيل ضابط، ملازم، ملازم أول، نقيب، رائد، مقدم، عقيد، عميد، لواء، فريق، فريق أول
 
 **Database Migrations:** Drizzle Kit for schema migrations, managed in the `/migrations` directory.
 

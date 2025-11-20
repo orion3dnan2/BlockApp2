@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowRight, FileText, Printer, Calendar, Users, Building, Shield, MapPin, Filter, X } from "lucide-react";
 import { Link } from "wouter";
 import type { Record as RecordType } from "@shared/schema";
-import { format, subDays, subMonths, subYears, isAfter, isSameDay, startOfDay, startOfYear } from "date-fns";
+import { format, subDays, subMonths, subYears, isSameDay, startOfDay, isWithinInterval } from "date-fns";
 import { ar } from "date-fns/locale";
 import {
   Table,
@@ -52,8 +52,8 @@ export default function ReportsPage() {
   }, [records]);
 
   const uniqueActionTypes = useMemo(() => {
-    const values = Array.from(new Set(records.map(r => (r as any).actionType))).filter(Boolean);
-    return values.sort((a, b) => String(a).localeCompare(String(b), "ar"));
+    const values = Array.from(new Set(records.map(r => r.actionType))).filter((v): v is string => Boolean(v));
+    return values.sort((a, b) => a.localeCompare(b, "ar"));
   }, [records]);
 
   const uniqueRanks = useMemo(() => {
@@ -80,11 +80,11 @@ export default function ReportsPage() {
           case "today":
             return isSameDay(recordDate, today);
           case "week":
-            return isAfter(recordDate, subDays(now, 7));
+            return isWithinInterval(recordDate, { start: startOfDay(subDays(now, 7)), end: now });
           case "month":
-            return isAfter(recordDate, subMonths(now, 1));
+            return isWithinInterval(recordDate, { start: startOfDay(subMonths(now, 1)), end: now });
           case "year":
-            return isAfter(recordDate, subYears(now, 1));
+            return isWithinInterval(recordDate, { start: startOfDay(subYears(now, 1)), end: now });
           default:
             return true;
         }
@@ -103,7 +103,7 @@ export default function ReportsPage() {
 
     // Action type filter
     if (filterActionType) {
-      result = result.filter(r => (r as any).actionType === filterActionType);
+      result = result.filter(r => r.actionType === filterActionType);
     }
 
     // Rank filter
@@ -137,15 +137,15 @@ export default function ReportsPage() {
       }).length,
       week: records.filter((r) => {
         const date = r.tourDate || r.createdAt;
-        return date && isAfter(new Date(date), subDays(now, 7));
+        return date && isWithinInterval(new Date(date), { start: startOfDay(subDays(now, 7)), end: now });
       }).length,
       month: records.filter((r) => {
         const date = r.tourDate || r.createdAt;
-        return date && isAfter(new Date(date), subMonths(now, 1));
+        return date && isWithinInterval(new Date(date), { start: startOfDay(subMonths(now, 1)), end: now });
       }).length,
       year: records.filter((r) => {
         const date = r.tourDate || r.createdAt;
-        return date && isAfter(new Date(date), subYears(now, 1));
+        return date && isWithinInterval(new Date(date), { start: startOfDay(subYears(now, 1)), end: now });
       }).length,
     };
   }, [records, filteredRecords]);
@@ -180,7 +180,7 @@ export default function ReportsPage() {
   const byActionType = useMemo(() => {
     const grouped: { [key: string]: number } = {};
     filteredRecords.forEach((record) => {
-      const actionType = (record as any).actionType || "غير محدد";
+      const actionType = record.actionType || "غير محدد";
       grouped[actionType] = (grouped[actionType] || 0) + 1;
     });
 
@@ -361,12 +361,12 @@ export default function ReportsPage() {
                 {/* Governorate Filter */}
                 <div className="space-y-2">
                   <Label>المحافظة</Label>
-                  <Select value={filterGovernorate} onValueChange={setFilterGovernorate}>
+                  <Select value={filterGovernorate || "__all__"} onValueChange={(val) => setFilterGovernorate(val === "__all__" ? "" : val)}>
                     <SelectTrigger data-testid="select-governorate-filter">
                       <SelectValue placeholder="جميع المحافظات" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="" data-testid="filter-all-governorates">جميع المحافظات</SelectItem>
+                      <SelectItem value="__all__" data-testid="filter-all-governorates">جميع المحافظات</SelectItem>
                       {uniqueGovernorates.map((gov) => (
                         <SelectItem key={gov} value={gov} data-testid={`filter-governorate-${gov}`}>
                           {gov}
@@ -379,12 +379,12 @@ export default function ReportsPage() {
                 {/* Police Station Filter */}
                 <div className="space-y-2">
                   <Label>المخفر</Label>
-                  <Select value={filterPoliceStation} onValueChange={setFilterPoliceStation}>
+                  <Select value={filterPoliceStation || "__all__"} onValueChange={(val) => setFilterPoliceStation(val === "__all__" ? "" : val)}>
                     <SelectTrigger data-testid="select-police-station-filter">
                       <SelectValue placeholder="جميع المخافر" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="" data-testid="filter-all-stations">جميع المخافر</SelectItem>
+                      <SelectItem value="__all__" data-testid="filter-all-stations">جميع المخافر</SelectItem>
                       {uniquePoliceStations.map((station) => (
                         <SelectItem key={station} value={station} data-testid={`filter-station-${station}`}>
                           {station}
@@ -397,12 +397,12 @@ export default function ReportsPage() {
                 {/* Action Type Filter */}
                 <div className="space-y-2">
                   <Label>نوع الإجراء</Label>
-                  <Select value={filterActionType} onValueChange={setFilterActionType}>
+                  <Select value={filterActionType || "__all__"} onValueChange={(val) => setFilterActionType(val === "__all__" ? "" : val)}>
                     <SelectTrigger data-testid="select-action-type-filter">
                       <SelectValue placeholder="جميع الإجراءات" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="" data-testid="filter-all-action-types">جميع الإجراءات</SelectItem>
+                      <SelectItem value="__all__" data-testid="filter-all-action-types">جميع الإجراءات</SelectItem>
                       {uniqueActionTypes.map((type) => (
                         <SelectItem key={String(type)} value={String(type)} data-testid={`filter-action-type-${type}`}>
                           {String(type)}
@@ -415,12 +415,12 @@ export default function ReportsPage() {
                 {/* Rank Filter */}
                 <div className="space-y-2">
                   <Label>الرتبة</Label>
-                  <Select value={filterRank} onValueChange={setFilterRank}>
+                  <Select value={filterRank || "__all__"} onValueChange={(val) => setFilterRank(val === "__all__" ? "" : val)}>
                     <SelectTrigger data-testid="select-rank-filter">
                       <SelectValue placeholder="جميع الرتب" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="" data-testid="filter-all-ranks">جميع الرتب</SelectItem>
+                      <SelectItem value="__all__" data-testid="filter-all-ranks">جميع الرتب</SelectItem>
                       {uniqueRanks.map((rank) => (
                         <SelectItem key={rank} value={rank} data-testid={`filter-rank-${rank}`}>
                           {rank}
