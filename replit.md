@@ -38,9 +38,10 @@ Preferred communication style: Simple, everyday language.
 - Form state managed by react-hook-form with Zod validation
 
 **Key Frontend Pages**
-- Dashboard: Module navigation grid with cards for Reports, Search, Users, Operations, and Backup
+- Dashboard: Welcome page with user info and quick access guide
 - Search Page: Advanced filtering interface with data table, CRUD operations
 - Reports Page: Comprehensive statistics and analytics dashboard with date filtering and print support
+- Settings Page: Admin-only page for user management and system configuration
 - Login Page: Tabbed authentication (login/register) with form validation
 
 ### Backend Architecture
@@ -51,16 +52,21 @@ Preferred communication style: Simple, everyday language.
 - HTTP-only architecture (no WebSocket usage despite ws dependency for database)
 
 **Authentication & Security**
-- JWT (JSON Web Tokens) for stateless authentication
+- JWT (JSON Web Tokens) for stateless authentication including user role
 - bcrypt for password hashing (10 rounds)
 - Token-based authentication with Bearer scheme
 - 7-day token expiration
 - Middleware-based route protection (authenticateToken)
+- Role-based access control (RBAC): admin, editor, user
+- Admin-only routes for user management and settings
 
 **API Endpoints Structure**
 - `/api/auth/register` - User registration
 - `/api/auth/login` - User authentication  
 - `/api/auth/me` - Current user verification
+- `/api/users` - User management (GET all users - admin only)
+- `/api/users` - Create new user (POST - admin only)
+- `/api/users/:id` - Delete user (DELETE - admin only)
 - `/api/records` - Record CRUD operations with search/filter support
 
 **Data Access Pattern**
@@ -82,6 +88,8 @@ Preferred communication style: Simple, everyday language.
 - username (unique, text)
 - password (hashed, text)
 - displayName (text)
+- role (text, enum: admin/editor/user, default: user)
+- createdAt (timestamp, auto-generated)
 
 *Records Table*
 - id (UUID primary key, auto-generated)
@@ -146,6 +154,65 @@ Preferred communication style: Simple, everyday language.
 - Node.js runtime for production server
 
 ## Recent Changes
+
+### Sidebar & Role-Based Access Control System (November 20, 2025)
+**New Major Features:**
+
+1. **Shadcn Sidebar Navigation**
+   - Professional RTL sidebar with collapsible functionality
+   - Ministry emblem header with system branding
+   - Main menu: Dashboard, Search, Reports
+   - Admin menu: Settings (visible only to admin users)
+   - User info footer with role display and logout button
+   - Full data-testid coverage for testing
+
+2. **Role-Based Access Control (RBAC)**
+   - Three user roles: admin, editor, user
+   - Admin role can manage all users and access settings
+   - Editor role for content management (future use)
+   - User role for basic access
+   - Role stored in JWT token for secure verification
+
+3. **Settings Page (Admin Only)**
+   - User management: Add, view, delete users
+   - Role assignment during user creation
+   - Prevents admin from deleting their own account
+   - Data management section for future import/export
+   - Admin-only access control with clear unauthorized message
+   - Full React Query integration with proper error handling
+
+4. **Enhanced Dashboard**
+   - Welcome message with user greeting
+   - Quick access guide to system features
+   - User information card showing name, username, role
+   - Conditional display based on user permissions
+   - Clean, modern design matching ministry theme
+
+5. **Updated Architecture**
+   - App.tsx now uses SidebarProvider layout
+   - Removed old Header/Footer in favor of Sidebar
+   - Header reduced to sidebar trigger and app title
+   - Full-height layout with proper overflow handling
+
+6. **Database Schema Updates**
+   - Added `role` field to users table (admin/editor/user)
+   - Added `createdAt` timestamp to users table
+   - Updated storage interface to support user management
+   - New API endpoints for user CRUD operations
+
+7. **Security Enhancements**
+   - Admin-only protection on user management endpoints
+   - Role verification in JWT tokens
+   - Password excluded from API responses
+   - Self-deletion prevention for admin users
+
+**Technical Implementation:**
+- Shadcn Sidebar component with RTL support
+- Role-based conditional rendering throughout UI
+- Secure admin-only API endpoints
+- React Query for user management state
+- Full TypeScript type safety with role enums
+- Comprehensive test IDs for automation
 
 ### Reports Page Implementation (November 20, 2025)
 **New Feature: Comprehensive Reports & Analytics Dashboard**

@@ -1,27 +1,43 @@
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import Header, { Footer } from "@/components/Header";
+import { AppSidebar } from "@/components/app-sidebar";
 import Dashboard from "@/pages/dashboard";
 import SearchPage from "@/pages/search";
 import ReportsPage from "@/pages/reports";
+import SettingsPage from "@/pages/settings";
 import LoginPage from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
 function ProtectedLayout({ children }: { children: React.ReactNode }) {
+  const sidebarStyle = {
+    "--sidebar-width": "16rem",
+    "--sidebar-width-icon": "3rem",
+  };
+
   return (
     <ProtectedRoute>
-      <div className="flex min-h-screen flex-col">
-        <Header />
-        <main className="flex-1">
-          {children}
-        </main>
-        <Footer />
-      </div>
+      <SidebarProvider style={sidebarStyle as React.CSSProperties}>
+        <div className="flex h-screen w-full" dir="rtl">
+          <AppSidebar />
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <header className="flex h-14 items-center border-b px-4 gap-4" data-testid="header-main">
+              <SidebarTrigger data-testid="button-sidebar-toggle" />
+              <h1 className="flex-1 text-lg font-semibold" data-testid="text-app-title">
+                نظام البلوكات
+              </h1>
+            </header>
+            <main className="flex-1 overflow-auto">
+              {children}
+            </main>
+          </div>
+        </div>
+      </SidebarProvider>
     </ProtectedRoute>
   );
 }
@@ -45,28 +61,9 @@ function Router() {
           <ReportsPage />
         </ProtectedLayout>
       </Route>
-      <Route path="/users">
+      <Route path="/settings">
         <ProtectedLayout>
-          <div className="container mx-auto max-w-7xl px-6 py-8" dir="rtl">
-            <h2 className="text-2xl font-semibold">المستخدمين</h2>
-            <p className="mt-4 text-muted-foreground">قريباً...</p>
-          </div>
-        </ProtectedLayout>
-      </Route>
-      <Route path="/operations">
-        <ProtectedLayout>
-          <div className="container mx-auto max-w-7xl px-6 py-8" dir="rtl">
-            <h2 className="text-2xl font-semibold">عمليات البلاغات</h2>
-            <p className="mt-4 text-muted-foreground">قريباً...</p>
-          </div>
-        </ProtectedLayout>
-      </Route>
-      <Route path="/backup">
-        <ProtectedLayout>
-          <div className="container mx-auto max-w-7xl px-6 py-8" dir="rtl">
-            <h2 className="text-2xl font-semibold">النسخة الاحتياطية</h2>
-            <p className="mt-4 text-muted-foreground">قريباً...</p>
-          </div>
+          <SettingsPage />
         </ProtectedLayout>
       </Route>
       <Route component={NotFound} />

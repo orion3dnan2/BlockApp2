@@ -8,6 +8,8 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   displayName: text("display_name").notNull(),
+  role: text("role").notNull().default("user"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const records = pgTable("records", {
@@ -32,6 +34,9 @@ export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
   displayName: true,
+  role: true,
+}).extend({
+  role: z.enum(["admin", "editor", "user"]).default("user"),
 });
 
 export const insertRecordSchema = createInsertSchema(records).omit({
