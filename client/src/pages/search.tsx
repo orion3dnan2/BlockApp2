@@ -66,8 +66,8 @@ export default function SearchPage() {
         return (
           String(record.recordNumber).includes(query) ||
           fullName.includes(query) ||
-          record.outgoingNumber.toLowerCase().includes(query) ||
-          record.militaryNumber.toLowerCase().includes(query)
+          (record.outgoingNumber?.toLowerCase() || "").includes(query) ||
+          (record.militaryNumber?.toLowerCase() || "").includes(query)
         );
       });
     }
