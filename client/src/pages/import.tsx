@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,6 +28,8 @@ interface ExcelRow {
 }
 
 export default function ImportPage() {
+  const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -35,6 +39,17 @@ export default function ImportPage() {
     failed: number;
     errors: string[];
   } | null>(null);
+
+  useEffect(() => {
+    if (user && user.role !== "admin" && user.role !== "supervisor") {
+      toast({
+        title: "غير مصرح",
+        description: "ليس لديك صلاحية للوصول إلى هذه الصفحة",
+        variant: "destructive",
+      });
+      setLocation("/");
+    }
+  }, [user, setLocation, toast]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -69,7 +84,7 @@ export default function ImportPage() {
     if (!file) return;
 
     setIsProcessing(true);
-    setProgress(0);
+    setProgress(10);
     setResults(null);
 
     try {
@@ -88,63 +103,59 @@ export default function ImportPage() {
         return;
       }
 
-      let successCount = 0;
-      let failedCount = 0;
-      const errors: string[] = [];
+      setProgress(30);
 
-      for (let i = 0; i < rows.length; i++) {
-        const row = rows[i];
-        setProgress(Math.round(((i + 1) / rows.length) * 100));
+      const recordsToImport: Partial<InsertRecord>[] = rows.map((row) => ({
+        outgoingNumber: row["رقم الصادر"]?.toString() || "",
+        militaryNumber: row["الرقم العسكري"]?.toString(),
+        actionType: row["نوع الاجراء"],
+        ports: row["المنافذ"],
+        recordedNotes: row["الملاحظات المدونة"],
+        firstName: row["الاسم الاول"] || "",
+        secondName: row["الاسم الثاني"] || "",
+        thirdName: row["الاسم الثالث"] || "",
+        fourthName: row["الاسم الرابع"] || "",
+        tourDate: row["تاريخ الجولة"] ? parseExcelDate(row["تاريخ الجولة"]) : new Date(),
+        rank: row["الرتبة"] || "",
+        governorate: row["المحافظة"] || "",
+        policeStation: row["المخفر"] || "",
+      }));
 
-        try {
-          const record: Partial<InsertRecord> = {
-            outgoingNumber: row["رقم الصادر"]?.toString() || "",
-            militaryNumber: row["الرقم العسكري"]?.toString(),
-            actionType: row["نوع الاجراء"],
-            ports: row["المنافذ"],
-            recordedNotes: row["الملاحظات المدونة"],
-            firstName: row["الاسم الاول"] || "",
-            secondName: row["الاسم الثاني"] || "",
-            thirdName: row["الاسم الثالث"] || "",
-            fourthName: row["الاسم الرابع"] || "",
-            tourDate: row["تاريخ الجولة"] ? parseExcelDate(row["تاريخ الجولة"]) : new Date(),
-            rank: row["الرتبة"] || "",
-            governorate: row["المحافظة"] || "",
-            policeStation: row["المخفر"] || "",
-          };
+      setProgress(50);
 
-          const res = await apiRequest("POST", "/api/records", record);
-          
-          if (res.ok) {
-            successCount++;
-          } else {
-            const errorData = await res.json();
-            failedCount++;
-            errors.push(`الصف ${i + 2}: ${errorData.message || "خطأ غير معروف"}`);
-          }
-        } catch (error) {
-          failedCount++;
-          errors.push(`الصف ${i + 2}: ${error instanceof Error ? error.message : "خطأ في المعالجة"}`);
-        }
+      const res = await apiRequest("POST", "/api/records/import", { records: recordsToImport });
+
+      setProgress(90);
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "خطأ في الاستيراد");
       }
 
-      setResults({ success: successCount, failed: failedCount, errors });
+      const result = await res.json();
+      setResults({
+        success: result.success || 0,
+        failed: result.failed || 0,
+        errors: result.errors || [],
+      });
+
+      setProgress(100);
       queryClient.invalidateQueries({ queryKey: ["/api/records"] });
 
       toast({
         title: "تم الاستيراد",
-        description: `تم استيراد ${successCount} سجل بنجاح${failedCount > 0 ? ` وفشل ${failedCount} سجل` : ""}`,
-        variant: failedCount === 0 ? "default" : "destructive",
+        description: `تم استيراد ${result.success} سجل بنجاح${result.failed > 0 ? ` وفشل ${result.failed} سجل` : ""}`,
+        variant: result.failed === 0 ? "default" : "destructive",
       });
     } catch (error) {
       toast({
         title: "خطأ",
-        description: "حدث خطأ أثناء قراءة الملف",
+        description: error instanceof Error ? error.message : "حدث خطأ أثناء قراءة الملف",
         variant: "destructive",
       });
     } finally {
       setIsProcessing(false);
-      setProgress(0);
+      setTimeout(() => setProgress(0), 500);
     }
   };
 

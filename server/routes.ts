@@ -236,6 +236,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/records/import", authenticateToken, requireAdminOrSupervisor, async (req: AuthRequest, res) => {
+    try {
+      const { records } = req.body;
+
+      if (!Array.isArray(records) || records.length === 0) {
+        return res.status(400).json({ message: "Invalid input: records array is required and must not be empty" });
+      }
+
+      let successCount = 0;
+      let failedCount = 0;
+      const errors: string[] = [];
+
+      for (let i = 0; i < records.length; i++) {
+        try {
+          const data = insertRecordSchema.parse(records[i]);
+          await storage.createRecord(data);
+          successCount++;
+        } catch (error) {
+          failedCount++;
+          if (error instanceof z.ZodError) {
+            const firstError = error.errors[0];
+            errors.push(`الصف ${i + 2}: ${firstError.path.join('.')} - ${firstError.message}`);
+          } else {
+            errors.push(`الصف ${i + 2}: ${error instanceof Error ? error.message : "خطأ في المعالجة"}`);
+          }
+        }
+      }
+
+      res.json({
+        success: successCount,
+        failed: failedCount,
+        errors: errors.slice(0, 50),
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   app.put("/api/records/:id", authenticateToken, requireAdminOrSupervisor, async (req: AuthRequest, res) => {
     try {
       const updateSchema = insertRecordSchema.partial();
