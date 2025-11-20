@@ -79,9 +79,14 @@ export default function RecordForm({ record, onSubmit, onCancel }: RecordFormPro
   });
 
   const handleSubmit = async (data: FormValues) => {
+    // Ensure tourDate is a valid Date before converting to ISO string
+    const tourDateISO = data.tourDate instanceof Date && !isNaN(data.tourDate.getTime())
+      ? data.tourDate.toISOString()
+      : new Date(data.tourDate).toISOString();
+    
     await onSubmit({
       ...data,
-      tourDate: data.tourDate.toISOString(),
+      tourDate: tourDateISO,
     });
   };
 
