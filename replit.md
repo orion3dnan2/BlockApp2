@@ -38,8 +38,9 @@ Preferred communication style: Simple, everyday language.
 - Form state managed by react-hook-form with Zod validation
 
 **Key Frontend Pages**
-- Dashboard: Module navigation grid with cards for Reports, Search, Users, Operations, and Backup
-- Search Page: Advanced filtering interface with comprehensive filters (governorate, rank, office, police station, date range) and data table with CRUD operations
+- Dashboard: Module navigation grid with cards for Reports, Search, Data Entry, Users, and Backup
+- Search Page: View-only query interface with advanced filters (governorate, rank, office, police station, date range) and read-only data table
+- Data Entry Page: Dedicated interface for adding and editing records with form and editable data table
 - Reports Page: Comprehensive statistics and analytics dashboard with date filtering and print support
 - Users Page: Full user management interface with create, update, delete operations and search functionality
 - Login Page: Tabbed authentication (login/register) with form validation
@@ -149,6 +150,57 @@ Preferred communication style: Simple, everyday language.
 - Node.js runtime for production server
 
 ## Recent Changes
+
+### Separation of Search and Data Entry Pages (November 20, 2025)
+**Major UX Improvement: Complete Separation of Concerns**
+
+Restructured the application to clearly separate search/query functionality from data entry operations, addressing user confusion about page purposes.
+
+1. **New Data Entry Page (`/data-entry`)**
+   - Dedicated page for adding and editing records
+   - Prominent form at the top for creating new records
+   - Editable data table showing recent 10 records
+   - Full CRUD operations (Create, Update, Delete)
+   - Smooth scroll to top when editing
+   - Back button to dashboard
+   - Complete data-testid coverage
+
+2. **Redesigned Search Page (`/search`)**
+   - Now strictly read-only for querying and viewing
+   - Advanced filter panel with collapsible design
+   - Multiple filter criteria (governorate, rank, office, police station, date range)
+   - Real-time search with results counter
+   - View-only data table (no edit/delete buttons)
+   - Edit redirects to data-entry page with record ID
+   - Clear filters functionality
+   - Optimized with useMemo for performance
+
+3. **Enhanced DataTable Component**
+   - New `viewOnly` prop to control edit/delete visibility
+   - When `viewOnly={true}`: hides "Actions" column entirely
+   - Responsive column count adjustment (10 vs 11 columns)
+   - Maintains all sorting and display functionality
+   - Full TypeScript type safety
+
+4. **Updated Dashboard Navigation**
+   - "إدخال البيانات" card now routes to `/data-entry`
+   - "استعلام" card routes to `/search`
+   - Clear separation in module organization
+   - Improved user journey
+
+**Technical Implementation:**
+- Created new `data-entry.tsx` page with full CRUD capabilities
+- Refactored `search.tsx` to remove mutations and forms
+- Updated `DataTable.tsx` with optional `viewOnly` mode
+- Added new route in `App.tsx` for `/data-entry`
+- Updated dashboard routing logic
+- Maintained all existing functionality while improving UX
+
+**User Impact:**
+- Eliminates confusion between searching and data entry
+- Clear mental model: Search = View, Data Entry = Modify
+- Improved workflow efficiency
+- Better accessibility for non-technical users
 
 ### Users Management & Enhanced Search (November 20, 2025)
 **New Features: Complete User Management and Advanced Search Filters**
