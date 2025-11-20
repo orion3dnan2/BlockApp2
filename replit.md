@@ -32,7 +32,7 @@ Preferred communication style: Simple, everyday language.
 
 **Server Framework:** Express.js with TypeScript, implementing a RESTful API.
 
-**Authentication & Security:** JWT for stateless authentication (7-day expiration), `bcrypt` for password hashing (10 rounds), and middleware for route protection.
+**Authentication & Security:** JWT for stateless authentication (7-day expiration) with role-based authorization, `bcrypt` for password hashing (10 rounds), and middleware for route protection (`authenticateToken`, `requireAdmin`, `requireAdminOrSupervisor`).
 
 **API Endpoints Structure:**
 - `/api/auth/register`, `/api/auth/login`, `/api/auth/me` for authentication.
@@ -63,6 +63,37 @@ Preferred communication style: Simple, everyday language.
 جندي، جندي أول، عريف، رقيب، رقيب أول، وكيل ضابط، ملازم، ملازم أول، نقيب، رائد، مقدم، عقيد، عميد، لواء، فريق، فريق أول
 
 **Database Migrations:** Drizzle Kit for schema migrations, managed in the `/migrations` directory.
+
+## Role-Based Access Control (RBAC)
+
+**System Roles:**
+- **admin (مدير)**: Full access - can manage users (create, update, delete) and records (create, update, delete, view)
+- **supervisor (مشرف)**: Can manage records (create, update, delete, view) but cannot manage users
+- **user (مستخدم عادي)**: Read-only access - can only view records and reports
+
+**Authorization Implementation:**
+- JWT tokens include user role for server-side authorization
+- Middleware functions enforce permissions:
+  - `authenticateToken`: Verifies JWT and extracts user info
+  - `requireAdmin`: Allows only admins (user management routes)
+  - `requireAdminOrSupervisor`: Allows admins and supervisors (record management routes)
+
+**Protected Routes:**
+- `POST/PUT/DELETE /api/users`: Requires admin role
+- `POST/PUT/DELETE /api/records`: Requires admin or supervisor role
+- `GET /api/users, /api/records`: Requires authentication only
+
+**Creating the First Admin:**
+Since the registration endpoint (`/api/auth/register`) creates users with the default "user" role, you need to manually promote a user to admin using SQL:
+```sql
+UPDATE users SET role = 'admin' WHERE username = 'your_username';
+```
+After updating the role, the user must log in again to receive a new JWT token with the admin role.
+
+**Important Notes:**
+- Users with old JWT tokens (before role implementation) must re-login to get tokens with role information
+- Only admins can create other admins or supervisors through the Users page
+- Regular users cannot perform any create/update/delete operations
 
 ## External Dependencies
 
