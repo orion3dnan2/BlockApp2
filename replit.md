@@ -48,7 +48,7 @@ Preferred communication style: Simple, everyday language.
 
 **Schema Design:**
 - **Users Table:** `id` (UUID), `username` (unique), `password` (hashed), `displayName`.
-- **Records Table:** `id` (UUID), `recordNumber` (serial, unique, auto-generated), `outgoingNumber`, `militaryNumber`, `recordedNotes`, `firstName`, `secondName`, `thirdName`, `fourthName`, `tourDate`, `rank`, `governorate`, `office`, `policeStation`, `createdAt`.
+- **Records Table:** `id` (UUID), `recordNumber` (serial, unique, auto-generated), `outgoingNumber` (non-unique, allows duplicates), `militaryNumber` (optional), `ports` (optional), `recordedNotes`, `firstName`, `secondName`, `thirdName`, `fourthName`, `tourDate`, `rank`, `governorate`, `office`, `policeStation`, `createdAt`.
 
 **Database Migrations:** Drizzle Kit for schema migrations, managed in the `/migrations` directory.
 
