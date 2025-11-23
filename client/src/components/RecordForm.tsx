@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { insertRecordSchema } from "@shared/schema";
-import type { Record, PoliceStation } from "@shared/schema";
+import type { Record, PoliceStation, Port } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 
@@ -44,15 +44,25 @@ const ranks = [
 
 export default function RecordForm({ record, onSubmit, onCancel }: RecordFormProps) {
   const [policeStations, setPoliceStations] = useState<PoliceStation[]>([]);
+  const [ports, setPorts] = useState<Port[]>([]);
   
   // Fetch police stations
   const { data: stationsData = [] } = useQuery<PoliceStation[]>({
     queryKey: ["/api/police-stations"],
   });
   
+  // Fetch ports
+  const { data: portsData = [] } = useQuery<Port[]>({
+    queryKey: ["/api/ports"],
+  });
+  
   useEffect(() => {
     setPoliceStations(stationsData);
   }, [stationsData]);
+  
+  useEffect(() => {
+    setPorts(portsData);
+  }, [portsData]);
   const getTourDateDefault = (tourDate: any): Date | undefined => {
     if (!tourDate) return undefined;
     const date = new Date(tourDate);
@@ -299,9 +309,20 @@ export default function RecordForm({ record, onSubmit, onCancel }: RecordFormPro
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="font-semibold">المنافذ</FormLabel>
-                <FormControl>
-                  <Input {...field} value={field.value || ""} data-testid="input-ports" />
-                </FormControl>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
+                  <FormControl>
+                    <SelectTrigger data-testid="select-ports">
+                      <SelectValue placeholder="اختر المنفذ" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {ports.map((port) => (
+                      <SelectItem key={port.id} value={port.name} data-testid={`select-item-port-${port.id}`}>
+                        {port.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
