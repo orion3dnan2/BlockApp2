@@ -1,8 +1,10 @@
-# نظام إدارة الرقابة والتفتيش - Oversight and Inspection Management System
+# Block System - نظام الإدارة
 
 ## Overview
 
-نظام إدارة الرقابة والتفتيش (Oversight and Inspection Management System) is an Arabic-first, full-stack web application for managing reports and records (البلاغات والقيود). It features a React frontend and Express backend with an RTL layout. The system provides comprehensive record management including search, filtering, CRUD operations, user authentication, and role-based access control, designed to streamline administrative oversight. The system's ambition is to offer a robust, intuitive platform for efficient data handling and improved administrative workflows in an Arabic-centric environment.
+Block System is a comprehensive Arabic-language management system for tracking and managing reports and restrictions (البلاغات والقيود). The application provides a full-featured platform for data entry, search, reporting, and administrative management with role-based access control and granular permissions.
+
+The system is built as a full-stack application with a React frontend and Express backend, using MySQL for data persistence. It supports multiple user roles (admin, supervisor, user) with customizable permissions for different modules and features.
 
 ## User Preferences
 
@@ -12,70 +14,152 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend Architecture
 
-The frontend is built with React 18, TypeScript, Vite, and Wouter for routing. UI components use `shadcn/ui` on Radix UI, styled with Tailwind CSS, featuring a "New York" style, custom Arabic fonts (Cairo, Tajawal), and a default RTL layout. State management combines React Query for server state, Context API for authentication, and React hooks for local UI state. Form handling and validation are managed by `react-hook-form` with Zod.
+**Framework & Build System:**
+- React with TypeScript for type safety
+- Vite as the build tool and development server
+- Wouter for client-side routing (lightweight alternative to React Router)
+- TanStack Query (React Query) for server state management and caching
 
-**Key Frontend Pages:**
-- **Home Page:** Two-tab interface separating administrative systems (placeholder) and the main blocks system.
-- **Dashboard:** Navigation to core modules, dynamically filtered by user role.
-- **Search Page:** Read-only interface with advanced filters and a data table.
-- **Data Entry Page:** Dedicated interface for adding and editing records with CRUD operations.
-- **Reports Page:** Enhanced statistics and analytics dashboard.
-- **Settings Page:** Comprehensive management with tabs for Users, Police Stations, and Ports, with role-based access.
-- **Import Page:** Excel file import for bulk data entry.
-- **Login Page:** Tabbed authentication (login/register).
-- **Access Denied Page:** Informs unauthorized users and offers navigation.
+**UI Component System:**
+- shadcn/ui component library (New York style variant)
+- Radix UI primitives for accessible components
+- Tailwind CSS for styling with custom CSS variables for theming
+- Right-to-left (RTL) layout support for Arabic language
+- Custom fonts: Cairo and Tajawal for Arabic typography
+
+**State Management:**
+- React Context API for authentication state
+- TanStack Query for all server data fetching and caching
+- Local component state with React hooks
+
+**Form Handling:**
+- React Hook Form for form state management
+- Zod for schema validation
+- @hookform/resolvers for integration between React Hook Form and Zod
+
+**Key Design Decisions:**
+- Chose Vite over Create React App for faster development and better production builds
+- Selected Wouter over React Router for smaller bundle size and simpler API
+- Used TanStack Query to eliminate manual cache management and provide automatic refetching
+- Implemented shadcn/ui for consistent, accessible components that can be customized directly
 
 ### Backend Architecture
 
-The backend uses Express.js with TypeScript, implementing a RESTful API. Authentication is handled via JWT (7-day expiration) with `bcrypt` for password hashing and role-based authorization enforced by middleware (`authenticateToken`, `requireAdmin`, `requireAdminOrSupervisor`). A repository pattern with an `IStorage` interface, implemented by `DatabaseStorage`, handles PostgreSQL operations.
+**Server Framework:**
+- Express.js for HTTP server and routing
+- Node.js ESM modules (type: "module")
+- TypeScript for type safety across the stack
 
-**Key API Endpoints:**
-- `/api/auth/*`: User authentication.
-- `/api/users`: User management (admin only).
-- `/api/records`: Record CRUD operations, search, filter, and import.
-- `/api/police-stations`: Police station CRUD (admin/supervisor only).
-- `/api/ports`: Port CRUD (admin/supervisor only).
+**Authentication & Authorization:**
+- JWT (JSON Web Tokens) for stateless authentication
+- bcryptjs for password hashing
+- Role-based access control (admin, supervisor, user)
+- Permission-based feature access using granular permissions array
+- Custom middleware for token verification and route protection
 
-### Data Storage Solutions
+**API Design:**
+- RESTful API endpoints
+- Shared TypeScript types between client and server (`shared/schema.ts`)
+- Request validation using Zod schemas
+- Consistent error handling and response formats
 
-**Database:** PostgreSQL (Neon serverless) with Drizzle ORM for type-safe operations. Drizzle Kit manages schema migrations.
+**Data Layer:**
+- Repository pattern implemented in `server/storage.ts`
+- Abstraction layer separating business logic from database operations
+- Timeout handling for database queries to prevent hanging requests
+
+**Key Design Decisions:**
+- JWT chosen for scalability and stateless authentication (no server-side sessions)
+- Shared schema definitions prevent type mismatches between frontend and backend
+- Repository pattern allows easier testing and potential database migration
+- Permission system provides flexibility beyond simple role-based access
+
+### Data Storage
+
+**Database:**
+- MySQL as the primary database
+- Drizzle ORM for type-safe database queries and migrations
+- Connection pooling via mysql2/promise
 
 **Schema Design:**
-- **Users:** `id`, `username`, `password` (hashed), `displayName`, `role` (admin, supervisor, user).
-- **Records:** `id`, `recordNumber` (auto-generated), `outgoingNumber`, `militaryNumber`, `actionType`, `ports`, `recordedNotes`, `firstName`, `secondName`, `thirdName`, `fourthName`, `tourDate`, `rank`, `governorate`, `office`, `policeStation`, `createdAt`.
-- **Police Stations:** `id`, `name`, `governorate`, `createdAt`.
-- **Ports:** `id`, `name`, `createdAt`.
+- `users` table: Stores user credentials, roles, and permissions (JSON array)
+- `records` table: Main data table for tracking records with auto-incrementing record numbers
+- `policeStations` table: Reference data for police station locations
+- `ports` table: Reference data for port/border crossing locations
 
-### Role-Based Access Control (RBAC)
+**Data Validation:**
+- Drizzle-Zod integration for automatic schema validation from database schema
+- Client and server both validate using the same Zod schemas
+- Type safety enforced throughout the stack via TypeScript
 
-The system defines three roles:
-- **admin (مدير)**: Full access, including user management.
-- **supervisor (مشرف)**: Can manage records, police stations, and ports, but not users.
-- **user (مستخدم عادي)**: Read-only access to records and reports.
+**Key Design Decisions:**
+- MySQL chosen for reliability and widespread hosting support
+- Drizzle ORM selected for its lightweight nature and excellent TypeScript support
+- JSON field used for permissions array to allow flexible permission management without schema changes
+- Shared schema in `shared/schema.ts` ensures consistency across client and server
 
-RBAC is enforced both on the backend (JWT and middleware) and frontend (RoleProtectedRoute component, dynamic UI filtering, access denied page).
+### Authentication & Authorization
 
-### Excel Import Feature
+**Authentication Flow:**
+1. User submits credentials to `/api/auth/login`
+2. Server validates credentials and generates JWT token
+3. Token stored in localStorage on client
+4. Token included in Authorization header for subsequent requests
+5. Server middleware verifies token and attaches user data to request
 
-Accessible to Admin and Supervisor roles, this feature allows bulk data entry via Excel files (`.xlsx/.xls`). The frontend provides a drag-and-drop interface, client-side parsing using `xlsx`, and sends records in a single POST request to `/api/records/import`. The backend validates each record against a Drizzle-Zod schema, creates valid entries, and reports success/failure counts with error details.
+**Authorization Levels:**
+- **Admin**: Full system access including user management
+- **Supervisor**: Data entry, reports, and limited settings access
+- **User**: View-only access to dashboard and search
 
-## External Dependencies
+**Permission System:**
+Available permissions: `dashboard`, `search`, `data_entry`, `reports`, `import`, `settings_users`, `settings_stations`, `settings_ports`
 
-**Database Services:**
-- **Neon Serverless Postgres:** Primary database.
+Users can have custom permission arrays regardless of role, providing fine-grained access control.
 
-**UI Component Libraries:**
-- **Radix UI:** Headless UI primitives.
-- **Lucide React:** Icon library.
+**Key Design Decisions:**
+- JWT expiration set to 7 days for user convenience
+- SESSION_SECRET environment variable required for token signing security
+- Permission-based routes in addition to role-based routes for flexibility
+- Client-side route guards prevent unauthorized navigation
 
-**Date & Time Utilities:**
-- **date-fns:** Date formatting and manipulation with Arabic locale support.
+### External Dependencies
+
+**Core Framework Dependencies:**
+- express: Web server framework
+- react & react-dom: UI library
+- vite: Build tool and dev server
+- drizzle-orm & mysql2: Database ORM and driver
+
+**UI & Styling:**
+- @radix-ui/*: Accessible component primitives
+- tailwindcss: Utility-first CSS framework
+- lucide-react: Icon library
+- class-variance-authority: Variant-based styling utility
 
 **Form & Validation:**
-- **react-hook-form:** Form state management.
-- **@hookform/resolvers:** Zod integration.
-- **Zod:** Runtime type validation and schema definition.
-- **drizzle-zod:** Automatic Zod schema generation from Drizzle schemas.
+- react-hook-form: Form state management
+- zod: Schema validation
+- @hookform/resolvers: Integration layer
 
-**Excel Processing:**
-- **xlsx:** Client-side Excel file parsing.
+**Data Management:**
+- @tanstack/react-query: Server state management
+- jsonwebtoken: JWT token generation and verification
+- bcryptjs: Password hashing
+
+**Development Tools:**
+- typescript: Type safety
+- tsx: TypeScript execution for development
+- esbuild: Production bundling for server
+- drizzle-kit: Database migrations
+
+**Replit-Specific Plugins:**
+- @replit/vite-plugin-runtime-error-modal: Error overlay in development
+- @replit/vite-plugin-cartographer: Development tooling
+- @replit/vite-plugin-dev-banner: Development banner
+
+**Key Integration Points:**
+- No external APIs or third-party services currently integrated
+- Database connection via DATABASE_URL environment variable (defaults to local MySQL)
+- Excel file imports using xlsx library for bulk data entry
+- date-fns for date manipulation with Arabic locale support
