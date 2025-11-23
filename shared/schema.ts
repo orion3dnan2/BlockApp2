@@ -1,7 +1,20 @@
 import { sql } from "drizzle-orm";
-import { mysqlTable, text, varchar, datetime, int } from "drizzle-orm/mysql-core";
+import { mysqlTable, text, varchar, datetime, int, json } from "drizzle-orm/mysql-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+export const availablePermissions = [
+  "dashboard",
+  "search",
+  "data_entry",
+  "reports",
+  "import",
+  "settings_users",
+  "settings_stations",
+  "settings_ports",
+] as const;
+
+export type Permission = typeof availablePermissions[number];
 
 export const users = mysqlTable("users", {
   id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
@@ -9,6 +22,7 @@ export const users = mysqlTable("users", {
   password: text("password").notNull(),
   displayName: text("display_name").notNull(),
   role: text("role").notNull().default("user"),
+  permissions: json("permissions").$type<Permission[]>().default(sql`(JSON_ARRAY())`),
 });
 
 export const policeStations = mysqlTable("police_stations", {
@@ -49,8 +63,10 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
   displayName: true,
   role: true,
+  permissions: true,
 }).extend({
   role: z.enum(["admin", "supervisor", "user"]).default("user"),
+  permissions: z.array(z.enum(availablePermissions)).optional().default([]),
 });
 
 export const insertPoliceStationSchema = createInsertSchema(policeStations).omit({
