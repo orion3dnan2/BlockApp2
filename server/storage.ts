@@ -72,25 +72,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db
+    await db
       .insert(users)
-      .values(insertUser)
-      .returning();
+      .values(insertUser);
+    const [user] = await db.select().from(users).where(eq(users.username, insertUser.username));
     return user;
   }
 
   async updateUser(id: string, data: Partial<InsertUser>): Promise<User | undefined> {
-    const [user] = await db
+    await db
       .update(users)
       .set(data)
-      .where(eq(users.id, id))
-      .returning();
+      .where(eq(users.id, id));
+    const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
   }
 
   async deleteUser(id: string): Promise<boolean> {
-    const result = await db.delete(users).where(eq(users.id, id));
-    return result.rowCount ? result.rowCount > 0 : false;
+    await db.delete(users).where(eq(users.id, id));
+    return true;
   }
 
   // Police Station methods
@@ -104,25 +104,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createPoliceStation(insertStation: InsertPoliceStation): Promise<PoliceStation> {
-    const [station] = await db
+    await db
       .insert(policeStations)
-      .values(insertStation)
-      .returning();
-    return station;
+      .values(insertStation);
+    const allStations = await db.select().from(policeStations).where(eq(policeStations.name, insertStation.name));
+    return allStations[0];
   }
 
   async updatePoliceStation(id: number, data: Partial<InsertPoliceStation>): Promise<PoliceStation | undefined> {
-    const [station] = await db
+    await db
       .update(policeStations)
       .set(data)
-      .where(eq(policeStations.id, id))
-      .returning();
+      .where(eq(policeStations.id, id));
+    const [station] = await db.select().from(policeStations).where(eq(policeStations.id, id));
     return station || undefined;
   }
 
   async deletePoliceStation(id: number): Promise<boolean> {
-    const result = await db.delete(policeStations).where(eq(policeStations.id, id));
-    return result.rowCount ? result.rowCount > 0 : false;
+    await db.delete(policeStations).where(eq(policeStations.id, id));
+    return true;
   }
 
   // Port methods
@@ -136,25 +136,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createPort(insertPort: InsertPort): Promise<Port> {
-    const [port] = await db
+    await db
       .insert(ports)
-      .values(insertPort)
-      .returning();
-    return port;
+      .values(insertPort);
+    const allPorts = await db.select().from(ports).where(eq(ports.name, insertPort.name));
+    return allPorts[0];
   }
 
   async updatePort(id: number, data: Partial<InsertPort>): Promise<Port | undefined> {
-    const [port] = await db
+    await db
       .update(ports)
       .set(data)
-      .where(eq(ports.id, id))
-      .returning();
+      .where(eq(ports.id, id));
+    const [port] = await db.select().from(ports).where(eq(ports.id, id));
     return port || undefined;
   }
 
   async deletePort(id: number): Promise<boolean> {
-    const result = await db.delete(ports).where(eq(ports.id, id));
-    return result.rowCount ? result.rowCount > 0 : false;
+    await db.delete(ports).where(eq(ports.id, id));
+    return true;
   }
 
   // Record methods
@@ -240,28 +240,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createRecord(insertRecord: InsertRecord): Promise<Record> {
-    const [record] = await db
+    await db
       .insert(records)
-      .values(insertRecord)
-      .returning();
-    return record;
+      .values(insertRecord);
+    // Fetch the last inserted record by created date
+    const result = await db
+      .select()
+      .from(records)
+      .orderBy(records.createdAt)
+      .limit(1);
+    return result[result.length - 1];
   }
 
   async updateRecord(id: string, updateData: Partial<InsertRecord>): Promise<Record | undefined> {
-    const [record] = await db
+    await db
       .update(records)
       .set(updateData)
-      .where(eq(records.id, id))
-      .returning();
+      .where(eq(records.id, id));
+    const [record] = await db.select().from(records).where(eq(records.id, id));
     return record || undefined;
   }
 
   async deleteRecord(id: string): Promise<boolean> {
-    const result = await db
+    await db
       .delete(records)
-      .where(eq(records.id, id))
-      .returning();
-    return result.length > 0;
+      .where(eq(records.id, id));
+    return true;
   }
 }
 

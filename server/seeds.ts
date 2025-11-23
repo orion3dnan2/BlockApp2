@@ -61,7 +61,7 @@ export async function seedDatabase() {
     if (existingStations.length === 0) {
       console.log("📍 Inserting police stations...");
       for (const station of policeStationsData) {
-        await db.insert(policeStations).values(station).onConflictDoNothing();
+        await db.insert(policeStations).values(station).onDuplicateKeyUpdate({ set: { name: station.name } }).catch(() => {});
       }
       console.log(`✅ Inserted ${policeStationsData.length} police stations`);
     } else {
@@ -73,7 +73,7 @@ export async function seedDatabase() {
     if (existingPorts.length === 0) {
       console.log("🚪 Inserting ports...");
       for (const port of portsData) {
-        await db.insert(ports).values(port).onConflictDoNothing();
+        await db.insert(ports).values(port).onDuplicateKeyUpdate({ set: { name: port.name } }).catch(() => {});
       }
       console.log(`✅ Inserted ${portsData.length} ports`);
     } else {

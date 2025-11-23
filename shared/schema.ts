@@ -1,32 +1,32 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, serial } from "drizzle-orm/pg-core";
+import { mysqlTable, text, varchar, datetime, int } from "drizzle-orm/mysql-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const users = mysqlTable("users", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   displayName: text("display_name").notNull(),
   role: text("role").notNull().default("user"),
 });
 
-export const policeStations = pgTable("police_stations", {
-  id: serial("id").primaryKey(),
+export const policeStations = mysqlTable("police_stations", {
+  id: int("id").primaryKey().autoincrement(),
   name: text("name").notNull().unique(),
   governorate: text("governorate").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: datetime("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const ports = pgTable("ports", {
-  id: serial("id").primaryKey(),
+export const ports = mysqlTable("ports", {
+  id: int("id").primaryKey().autoincrement(),
   name: text("name").notNull().unique(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: datetime("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const records = pgTable("records", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  recordNumber: serial("record_number").notNull().unique(),
+export const records = mysqlTable("records", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
+  recordNumber: int("record_number").notNull().unique().autoincrement(),
   outgoingNumber: text("outgoing_number").notNull(),
   militaryNumber: text("military_number"),
   actionType: text("action_type"),
@@ -36,12 +36,12 @@ export const records = pgTable("records", {
   secondName: text("second_name").notNull(),
   thirdName: text("third_name").notNull(),
   fourthName: text("fourth_name").notNull(),
-  tourDate: timestamp("tour_date").notNull(),
+  tourDate: datetime("tour_date").notNull(),
   rank: text("rank").notNull(),
   governorate: text("governorate").notNull(),
   office: text("office"),
   policeStation: text("police_station"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: datetime("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
