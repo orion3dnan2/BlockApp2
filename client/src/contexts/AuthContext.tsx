@@ -2,10 +2,13 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { ApiClient } from "@/lib/api";
 import { useLocation } from "wouter";
 
-interface User {
+export type UserRole = "admin" | "supervisor" | "user";
+
+export interface User {
   id: string;
   username: string;
   displayName: string;
+  role: UserRole;
 }
 
 interface AuthContextType {

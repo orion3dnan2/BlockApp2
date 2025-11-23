@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import RoleProtectedRoute from "@/components/RoleProtectedRoute";
 import Header, { Footer } from "@/components/Header";
 import HomePage from "@/pages/home";
 import Dashboard from "@/pages/dashboard";
@@ -51,7 +52,9 @@ function Router() {
       </Route>
       <Route path="/blocks/data-entry">
         <ProtectedLayout>
-          <DataEntryPage />
+          <RoleProtectedRoute allowedRoles={["admin", "supervisor"]}>
+            <DataEntryPage />
+          </RoleProtectedRoute>
         </ProtectedLayout>
       </Route>
       <Route path="/blocks/reports">
@@ -61,12 +64,16 @@ function Router() {
       </Route>
       <Route path="/blocks/users">
         <ProtectedLayout>
-          <UsersPage />
+          <RoleProtectedRoute allowedRoles={["admin"]}>
+            <UsersPage />
+          </RoleProtectedRoute>
         </ProtectedLayout>
       </Route>
       <Route path="/blocks/import">
         <ProtectedLayout>
-          <ImportPage />
+          <RoleProtectedRoute allowedRoles={["admin", "supervisor"]}>
+            <ImportPage />
+          </RoleProtectedRoute>
         </ProtectedLayout>
       </Route>
       <Route component={NotFound} />

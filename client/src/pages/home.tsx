@@ -1,53 +1,74 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, type UserRole } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, ShieldCheck, ClipboardList, Search, PieChart, Users, Database } from "lucide-react";
+
+interface ModuleCard {
+  title: string;
+  icon: any;
+  path: string;
+  description: string;
+  allowedRoles?: UserRole[];
+}
 
 export default function HomePage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("blocks");
 
-  const blockSystemCards = [
+  const allBlockSystemCards: ModuleCard[] = [
     { 
       title: "لوحة التحكم", 
       icon: ShieldCheck, 
       path: "/blocks/dashboard",
       description: "الصفحة الرئيسية للنظام",
+      allowedRoles: ["admin", "supervisor", "user"],
     },
     { 
       title: "البحث", 
       icon: Search, 
       path: "/blocks/search",
       description: "البحث في السجلات",
+      allowedRoles: ["admin", "supervisor", "user"],
     },
     { 
       title: "إدخال البيانات", 
       icon: ClipboardList, 
       path: "/blocks/data-entry",
       description: "إضافة وتعديل السجلات",
+      allowedRoles: ["admin", "supervisor"],
     },
     { 
       title: "التقارير", 
       icon: PieChart, 
       path: "/blocks/reports",
       description: "عرض الإحصائيات والتقارير",
+      allowedRoles: ["admin", "supervisor", "user"],
     },
     { 
       title: "المستخدمين", 
       icon: Users, 
       path: "/blocks/users",
       description: "إدارة المستخدمين",
+      allowedRoles: ["admin"],
     },
     { 
       title: "استيراد", 
       icon: Database, 
       path: "/blocks/import",
       description: "استيراد البيانات من Excel",
+      allowedRoles: ["admin", "supervisor"],
     },
   ];
+
+  // Filter cards based on user role
+  const blockSystemCards = user 
+    ? allBlockSystemCards.filter(card => 
+        !card.allowedRoles || card.allowedRoles.includes(user.role)
+      )
+    : allBlockSystemCards;
 
   const adminSystemCards = [
     { 

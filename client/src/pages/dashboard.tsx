@@ -1,37 +1,58 @@
 import { FileText, Search, Users, Database, FileInput } from "lucide-react";
 import { useLocation } from "wouter";
+import { useAuth, type UserRole } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 
+interface Module {
+  title: string;
+  icon: any;
+  path: string;
+  allowedRoles?: UserRole[];
+}
+
 export default function Dashboard() {
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
 
-  const modules = [
+  const allModules: Module[] = [
     { 
       title: "تقارير", 
       icon: FileText, 
       path: "/blocks/reports",
+      allowedRoles: ["admin", "supervisor", "user"],
     },
     { 
       title: "استعلام", 
       icon: Search, 
       path: "/blocks/search",
+      allowedRoles: ["admin", "supervisor", "user"],
     },
     { 
       title: "إدخال البيانات", 
       icon: FileInput, 
       path: "/blocks/data-entry",
+      allowedRoles: ["admin", "supervisor"],
     },
     { 
       title: "المستخدمين", 
       icon: Users, 
       path: "/blocks/users",
+      allowedRoles: ["admin"],
     },
     { 
       title: "استيراد", 
       icon: Database, 
       path: "/blocks/import",
+      allowedRoles: ["admin", "supervisor"],
     },
   ];
+
+  // Filter modules based on user role
+  const modules = user 
+    ? allModules.filter(module => 
+        !module.allowedRoles || module.allowedRoles.includes(user.role)
+      )
+    : allModules;
 
   return (
     <div className="flex min-h-[calc(100vh-64px)] items-center justify-center bg-gradient-to-br from-blue-100 via-gray-100 to-blue-50" dir="rtl">
