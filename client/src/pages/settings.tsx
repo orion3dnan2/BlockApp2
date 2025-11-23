@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Settings as SettingsIcon, Users, Building2, Ship } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Settings as SettingsIcon, Users, Building2, Ship, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLocation } from "wouter";
 import UsersManagement from "@/components/settings/UsersManagement";
 import PoliceStationsManagement from "@/components/settings/PoliceStationsManagement";
 import PortsManagement from "@/components/settings/PortsManagement";
 
 export default function SettingsPage() {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const isAdmin = user?.role === "admin";
   
   // Determine allowed default tab based on role
@@ -33,9 +36,19 @@ export default function SettingsPage() {
   return (
     <div className="container mx-auto px-4 py-8" dir="rtl">
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <SettingsIcon className="h-8 w-8 text-primary" />
-          <h1 className="text-4xl font-bold">الإعدادات</h1>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <SettingsIcon className="h-8 w-8 text-primary" />
+            <h1 className="text-4xl font-bold">الإعدادات</h1>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={() => setLocation("/")}
+            data-testid="button-back"
+          >
+            <ArrowRight className="ml-2 h-4 w-4" />
+            العودة للرئيسية
+          </Button>
         </div>
         <p className="text-muted-foreground text-lg">
           إدارة إعدادات النظام والبيانات الأساسية
