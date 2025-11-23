@@ -10,6 +10,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 23, 2025:**
+- Implemented comprehensive frontend role-based access control (UI-level protection):
+  - Created `RoleProtectedRoute` component for page-level access control
+  - Updated `AuthContext` to export `UserRole` type and include role in `User` interface
+  - Applied role-based route protection to all `/blocks/*` pages
+  - Implemented dynamic UI filtering in Home page and Dashboard - only shows accessible modules
+  - Added professional access-denied page with role information and navigation
+  - All automated tests passing for admin, supervisor, and user roles
+
 **November 20, 2025:**
 - Created two-tab home page with "نظام إداري" (placeholder) and "نظام البلوكات" (main system)
 - Renamed entire system to "نظام إدارة الرقابة والتفتيش"
@@ -37,14 +46,15 @@ Preferred communication style: Simple, everyday language.
 **Key Frontend Pages:**
 - **Home Page:** Two-tab interface after login (default tab: "نظام البلوكات"):
   - **Tab 1 - نظام إداري (Administrative System):** Currently showing placeholder ("قريباً" - Coming Soon).
-  - **Tab 2 - نظام البلوكات (Blocks System):** Displays 6 module cards: لوحة التحكم (Dashboard), البحث (Search), إدخال البيانات (Data Entry), التقارير (Reports), المستخدمين (Users), استيراد (Import).
-- **Dashboard:** Navigation to core modules (Reports, Search, Data Entry, Users, Import).
-- **Search Page:** Read-only query interface with advanced filters and a data table.
-- **Data Entry Page:** Dedicated interface for adding and editing records with CRUD operations.
-- **Reports Page:** Enhanced statistics and analytics dashboard with comprehensive filtering (date, governorate, police station, action type, rank, person name), professional print layout, and distribution analysis with percentages.
-- **Users Page:** Comprehensive user management (create, update, delete, search) with role-based permissions system (admin, supervisor, user).
-- **Import Page:** Excel file import interface for bulk data entry, restricted to admin and supervisor roles, with drag-and-drop upload, client-side parsing, and batch server processing.
+  - **Tab 2 - نظام البلوكات (Blocks System):** Displays module cards filtered by user role - only shows accessible modules.
+- **Dashboard:** Navigation to core modules, dynamically filtered based on user role.
+- **Search Page:** Read-only query interface with advanced filters and a data table (accessible to all roles).
+- **Data Entry Page:** Dedicated interface for adding and editing records with CRUD operations (admin and supervisor only).
+- **Reports Page:** Enhanced statistics and analytics dashboard with comprehensive filtering (accessible to all roles).
+- **Users Page:** Comprehensive user management (admin only).
+- **Import Page:** Excel file import interface for bulk data entry (admin and supervisor only).
 - **Login Page:** Tabbed authentication (login/register) with form validation.
+- **Access Denied Page:** Professional denial screen showing current role, required roles, and navigation back to home.
 
 ### Backend Architecture
 
@@ -90,18 +100,30 @@ Preferred communication style: Simple, everyday language.
 - **supervisor (مشرف)**: Can manage records (create, update, delete, view) but cannot manage users
 - **user (مستخدم عادي)**: Read-only access - can only view records and reports
 
-**Authorization Implementation:**
+**Backend Authorization:**
 - JWT tokens include user role for server-side authorization
 - Middleware functions enforce permissions:
   - `authenticateToken`: Verifies JWT and extracts user info
   - `requireAdmin`: Allows only admins (user management routes)
   - `requireAdminOrSupervisor`: Allows admins and supervisors (record management routes)
 
-**Protected Routes:**
+**Backend Protected Routes:**
 - `POST/PUT/DELETE /api/users`: Requires admin role
 - `POST/PUT/DELETE /api/records`: Requires admin or supervisor role
 - `POST /api/records/import`: Requires admin or supervisor role
 - `GET /api/users, /api/records`: Requires authentication only
+
+**Frontend Access Control:**
+- **RoleProtectedRoute Component:** Wraps protected pages and checks user role before rendering
+- **UI Filtering:** Home page and Dashboard dynamically hide cards for inaccessible modules
+- **Access Denied Page:** Shows when user attempts to access unauthorized page with role information
+- **Page-Level Protection:**
+  - `/blocks/dashboard`: All authenticated users
+  - `/blocks/search`: All authenticated users
+  - `/blocks/reports`: All authenticated users
+  - `/blocks/data-entry`: Admin and Supervisor only
+  - `/blocks/users`: Admin only
+  - `/blocks/import`: Admin and Supervisor only
 
 **Creating the First Admin:**
 Since the registration endpoint (`/api/auth/register`) creates users with the default "user" role, you need to manually promote a user to admin using SQL:
@@ -114,6 +136,7 @@ After updating the role, the user must log in again to receive a new JWT token w
 - Users with old JWT tokens (before role implementation) must re-login to get tokens with role information
 - Only admins can create other admins or supervisors through the Users page
 - Regular users cannot perform any create/update/delete operations
+- UI automatically adapts based on user role - users only see options they can access
 
 ## Excel Import Feature
 
