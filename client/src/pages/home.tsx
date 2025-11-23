@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useAuth, type UserRole } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, ShieldCheck, ClipboardList, Search, PieChart, Users, Database } from "lucide-react";
+import { FileText, ShieldCheck, ClipboardList, Search, PieChart, Settings, Database } from "lucide-react";
 
 interface ModuleCard {
   title: string;
@@ -48,11 +48,11 @@ export default function HomePage() {
       allowedRoles: ["admin", "supervisor", "user"],
     },
     { 
-      title: "المستخدمين", 
-      icon: Users, 
-      path: "/blocks/users",
-      description: "إدارة المستخدمين",
-      allowedRoles: ["admin"],
+      title: "الإعدادات", 
+      icon: Settings, 
+      path: "/blocks/settings",
+      description: "إدارة الإعدادات والبيانات الأساسية",
+      allowedRoles: ["admin", "supervisor"],
     },
     { 
       title: "استيراد", 

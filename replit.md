@@ -10,7 +10,26 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-**November 23, 2025:**
+**November 23, 2025 - Settings Page Implementation:**
+- Created comprehensive Settings page at `/blocks/settings` with three-tab interface:
+  - **Users Management (المستخدمين)**: Admin-only tab for user CRUD operations
+  - **Police Stations Management (المخافر)**: Admin + Supervisor tab for police stations CRUD
+  - **Ports Management (المنافذ)**: Admin + Supervisor tab for ports CRUD
+- Implemented role-based tab gating with controlled Tabs component:
+  - Admins see all 3 tabs (grid-cols-3), default tab: users
+  - Supervisors see 2 tabs only (grid-cols-2), default tab: police-stations
+  - Added `handleTabChange` guard to prevent non-admin tab selection
+  - Added `useEffect` guard to redirect non-admins away from users tab
+  - Prevents URL-based bypass (e.g., `/blocks/settings?tab=users`)
+- Created database tables: `police_stations` and `ports` with id, name, governorate (stations only), createdAt
+- Implemented backend API endpoints with admin/supervisor role restrictions:
+  - GET/POST/PUT/DELETE `/api/police-stations` (admin + supervisor)
+  - GET/POST/PUT/DELETE `/api/ports` (admin + supervisor)
+- Refactored UsersManagement component into tab-friendly layout (removed full-page wrapper)
+- Updated navigation: replaced `/blocks/users` with `/blocks/settings` in home.tsx and dashboard.tsx
+- Created test supervisor account (username: supervisor1, password: Admin@123)
+
+**November 23, 2025 - RBAC Implementation:**
 - Implemented comprehensive frontend role-based access control (UI-level protection):
   - Created `RoleProtectedRoute` component for page-level access control
   - Updated `AuthContext` to export `UserRole` type and include role in `User` interface
@@ -51,7 +70,11 @@ Preferred communication style: Simple, everyday language.
 - **Search Page:** Read-only query interface with advanced filters and a data table (accessible to all roles).
 - **Data Entry Page:** Dedicated interface for adding and editing records with CRUD operations (admin and supervisor only).
 - **Reports Page:** Enhanced statistics and analytics dashboard with comprehensive filtering (accessible to all roles).
-- **Users Page:** Comprehensive user management (admin only).
+- **Settings Page:** Comprehensive settings management with three tabs (admin and supervisor only):
+  - **Users Management (المستخدمين):** CRUD operations for user accounts (admin only)
+  - **Police Stations Management (المخافر):** CRUD operations for police stations (admin + supervisor)
+  - **Ports Management (المنافذ):** CRUD operations for ports/checkpoints (admin + supervisor)
+  - Role-based tab visibility and access control with URL bypass prevention
 - **Import Page:** Excel file import interface for bulk data entry (admin and supervisor only).
 - **Login Page:** Tabbed authentication (login/register) with form validation.
 - **Access Denied Page:** Professional denial screen showing current role, required roles, and navigation back to home.
@@ -64,10 +87,12 @@ Preferred communication style: Simple, everyday language.
 
 **API Endpoints Structure:**
 - `/api/auth/register`, `/api/auth/login`, `/api/auth/me` for authentication.
-- `/api/users` for user management (GET, PUT, DELETE).
+- `/api/users` for user management (GET, PUT, DELETE - admin only).
 - `/api/records` for record CRUD operations with search/filter support.
 - `/api/records/search` for advanced record search.
 - `/api/records/import` for bulk record import from Excel files (admin/supervisor only).
+- `/api/police-stations` for police stations CRUD operations (GET, POST, PUT, DELETE - admin/supervisor only).
+- `/api/ports` for ports CRUD operations (GET, POST, PUT, DELETE - admin/supervisor only).
 
 **Data Access Pattern:** Repository pattern with an `IStorage` interface, implemented by `DatabaseStorage` for PostgreSQL operations.
 

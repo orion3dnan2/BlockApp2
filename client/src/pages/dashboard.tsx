@@ -1,4 +1,4 @@
-import { FileText, Search, Users, Database, FileInput } from "lucide-react";
+import { FileText, Search, Users, Database, FileInput, Settings } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth, type UserRole } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
@@ -34,10 +34,10 @@ export default function Dashboard() {
       allowedRoles: ["admin", "supervisor"],
     },
     { 
-      title: "المستخدمين", 
-      icon: Users, 
-      path: "/blocks/users",
-      allowedRoles: ["admin"],
+      title: "الإعدادات", 
+      icon: Settings, 
+      path: "/blocks/settings",
+      allowedRoles: ["admin", "supervisor"],
     },
     { 
       title: "استيراد", 

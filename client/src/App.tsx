@@ -12,7 +12,7 @@ import Dashboard from "@/pages/dashboard";
 import SearchPage from "@/pages/search";
 import DataEntryPage from "@/pages/data-entry";
 import ReportsPage from "@/pages/reports";
-import UsersPage from "@/pages/users";
+import SettingsPage from "@/pages/settings";
 import ImportPage from "@/pages/import";
 import LoginPage from "@/pages/login";
 import NotFound from "@/pages/not-found";
@@ -62,10 +62,10 @@ function Router() {
           <ReportsPage />
         </ProtectedLayout>
       </Route>
-      <Route path="/blocks/users">
+      <Route path="/blocks/settings">
         <ProtectedLayout>
-          <RoleProtectedRoute allowedRoles={["admin"]}>
-            <UsersPage />
+          <RoleProtectedRoute allowedRoles={["admin", "supervisor"]}>
+            <SettingsPage />
           </RoleProtectedRoute>
         </ProtectedLayout>
       </Route>
