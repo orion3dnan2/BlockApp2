@@ -29,10 +29,10 @@ async function seed() {
 
     try {
       console.log("Creating test users...");
-      const createdUsers = await db.insert(users).values(testUsers).returning();
-      console.log(`✓ Created ${createdUsers.length} test users`);
+      await db.insert(users).values(testUsers);
+      console.log(`✓ Created ${testUsers.length} test users`);
     } catch (error: any) {
-      if (error.code === '23505') {
+      if (error.code === 'ER_DUP_ENTRY' || error.errno === 1062) {
         console.log("✓ Test users already exist, skipping...");
       } else {
         throw error;
@@ -86,8 +86,8 @@ async function seed() {
     ];
 
     console.log("Creating sample records...");
-    const createdRecords = await db.insert(records).values(sampleRecords).returning();
-    console.log(`✓ Created ${createdRecords.length} sample records`);
+    await db.insert(records).values(sampleRecords);
+    console.log(`✓ Created ${sampleRecords.length} sample records`);
 
     console.log("\n✅ Database seeded successfully!");
     console.log("\n📝 Test Accounts:");

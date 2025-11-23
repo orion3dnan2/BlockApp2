@@ -2,14 +2,25 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { seedDatabase } from "./seeds";
+import path from "path";
 
 const app = express();
 
+// Configure production/development mode
+const isProduction = process.env.NODE_ENV === "production";
+
 // Configure CORS and trust APP_URL
 const appUrl = process.env.APP_URL || "http://localhost:5000";
-const corsOrigins = [appUrl, "http://localhost:5000", "http://127.0.0.1:5000"];
+const corsOrigins = [
+  appUrl,
+  "http://localhost:5000",
+  "http://127.0.0.1:5000",
+  "http://blocksystem.local",
+  "http://localhost:3000",
+  "http://localhost:80"
+];
 
-// Trust proxy (for reverse proxy setups like Apache)
+// Trust proxy (for reverse proxy setups like Apache/WampServer)
 app.set("trust proxy", true);
 
 // CORS middleware
@@ -97,9 +108,10 @@ app.use((req, res, next) => {
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
+  if (!isProduction) {
     await setupVite(app, server);
   } else {
+    // In production: serve static files and SPA
     serveStatic(app);
   }
 
