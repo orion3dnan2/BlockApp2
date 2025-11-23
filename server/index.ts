@@ -84,15 +84,17 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Run database seeding (non-blocking - don't fail if it times out)
-  try {
-    const seedTimeout = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("Seed timeout")), 5000)
-    );
-    await Promise.race([seedDatabase(), seedTimeout]);
-  } catch (error) {
-    // Non-blocking - if seeding fails, continue anyway
-    console.warn("⚠️  Database seeding skipped:", (error as Error).message);
+  // Run database seeding only if explicitly enabled (prevents startup delays in production)
+  if (process.env.ENABLE_SEEDING === "true" || process.env.NODE_ENV === "development") {
+    try {
+      const seedTimeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Seed timeout")), 5000)
+      );
+      await Promise.race([seedDatabase(), seedTimeout]);
+    } catch (error) {
+      // Non-blocking - if seeding fails, continue anyway
+      console.warn("⚠️  Database seeding skipped:", (error as Error).message);
+    }
   }
 
   const server = await registerRoutes(app);

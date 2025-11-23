@@ -26,7 +26,7 @@ export const ports = mysqlTable("ports", {
 
 export const records = mysqlTable("records", {
   id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
-  recordNumber: int("record_number").notNull().unique().autoincrement(),
+  recordNumber: int("record_number").notNull().autoincrement().unique(),
   outgoingNumber: text("outgoing_number").notNull(),
   militaryNumber: text("military_number"),
   actionType: text("action_type"),
