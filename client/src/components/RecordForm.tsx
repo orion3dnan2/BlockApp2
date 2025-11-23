@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { insertRecordSchema } from "@shared/schema";
-import type { Record } from "@shared/schema";
+import type { Record, PoliceStation } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 
 // Use shared insertRecordSchema and extend for UI-specific validation
 const formSchema = insertRecordSchema.omit({ office: true });
@@ -41,6 +43,16 @@ const ranks = [
 ];
 
 export default function RecordForm({ record, onSubmit, onCancel }: RecordFormProps) {
+  const [policeStations, setPoliceStations] = useState<PoliceStation[]>([]);
+  
+  // Fetch police stations
+  const { data: stationsData = [] } = useQuery<PoliceStation[]>({
+    queryKey: ["/api/police-stations"],
+  });
+  
+  useEffect(() => {
+    setPoliceStations(stationsData);
+  }, [stationsData]);
   const getTourDateDefault = (tourDate: any): Date | undefined => {
     if (!tourDate) return undefined;
     const date = new Date(tourDate);
@@ -261,10 +273,21 @@ export default function RecordForm({ record, onSubmit, onCancel }: RecordFormPro
             name="policeStation"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="font-semibold">المخفر *</FormLabel>
-                <FormControl>
-                  <Input {...field} data-testid="input-police-station" />
-                </FormControl>
+                <FormLabel className="font-semibold">المخفر</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
+                  <FormControl>
+                    <SelectTrigger data-testid="select-police-station">
+                      <SelectValue placeholder="اختر المخفر" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {policeStations.map((station) => (
+                      <SelectItem key={station.id} value={station.name} data-testid={`select-item-police-station-${station.id}`}>
+                        {station.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}

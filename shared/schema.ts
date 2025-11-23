@@ -40,7 +40,7 @@ export const records = pgTable("records", {
   rank: text("rank").notNull(),
   governorate: text("governorate").notNull(),
   office: text("office"),
-  policeStation: text("police_station").notNull(),
+  policeStation: text("police_station"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -70,6 +70,7 @@ export const insertRecordSchema = createInsertSchema(records).omit({
 }).extend({
   tourDate: z.union([z.date(), z.string()]).pipe(z.coerce.date()),
   office: z.string().nullish().transform(val => val || null),
+  policeStation: z.string().nullish().transform(val => val || null),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
