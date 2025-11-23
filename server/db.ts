@@ -1,10 +1,12 @@
-import { drizzle } from 'drizzle-orm/mysql2';
-import mysql from 'mysql2/promise';
+import { drizzle } from 'drizzle-orm/neon-http';
+import { neon } from '@neondatabase/serverless';
 import * as schema from "@shared/schema";
 
-const databaseUrl = process.env.DATABASE_URL || "mysql://root:@localhost:3306/blocksystem";
+const databaseUrl = process.env.DATABASE_URL;
 
-// Parse DATABASE_URL properly for mysql2
-const pool = mysql.createPool(databaseUrl);
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL environment variable is required");
+}
 
-export const db = drizzle({ client: pool, schema, mode: 'default' });
+const sql = neon(databaseUrl);
+export const db = drizzle(sql, { schema });

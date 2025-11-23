@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { mysqlTable, text, varchar, datetime, int, json } from "drizzle-orm/mysql-core";
+import { pgTable, text, varchar, timestamp, serial, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -16,31 +16,31 @@ export const availablePermissions = [
 
 export type Permission = typeof availablePermissions[number];
 
-export const users = mysqlTable("users", {
-  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
+export const users = pgTable("users", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   displayName: text("display_name").notNull(),
   role: text("role").notNull().default("user"),
-  permissions: json("permissions").$type<Permission[]>().default(sql`(JSON_ARRAY())`),
+  permissions: json("permissions").$type<Permission[]>().default(sql`'[]'::json`),
 });
 
-export const policeStations = mysqlTable("police_stations", {
-  id: int("id").primaryKey().autoincrement(),
+export const policeStations = pgTable("police_stations", {
+  id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
   governorate: text("governorate").notNull(),
-  createdAt: datetime("created_at").default(sql`CURRENT_TIMESTAMP`),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const ports = mysqlTable("ports", {
-  id: int("id").primaryKey().autoincrement(),
+export const ports = pgTable("ports", {
+  id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
-  createdAt: datetime("created_at").default(sql`CURRENT_TIMESTAMP`),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const records = mysqlTable("records", {
-  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
-  recordNumber: int("record_number").notNull().autoincrement().unique(),
+export const records = pgTable("records", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`gen_random_uuid()`),
+  recordNumber: serial("record_number").notNull().unique(),
   outgoingNumber: text("outgoing_number").notNull(),
   militaryNumber: text("military_number"),
   actionType: text("action_type"),
@@ -50,12 +50,12 @@ export const records = mysqlTable("records", {
   secondName: text("second_name").notNull(),
   thirdName: text("third_name").notNull(),
   fourthName: text("fourth_name").notNull(),
-  tourDate: datetime("tour_date").notNull(),
+  tourDate: timestamp("tour_date").notNull(),
   rank: text("rank").notNull(),
   governorate: text("governorate").notNull(),
   office: text("office"),
   policeStation: text("police_station"),
-  createdAt: datetime("created_at").default(sql`CURRENT_TIMESTAMP`),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
