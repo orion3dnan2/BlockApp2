@@ -11,6 +11,19 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("user"),
 });
 
+export const policeStations = pgTable("police_stations", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  governorate: text("governorate").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const ports = pgTable("ports", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const records = pgTable("records", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   recordNumber: serial("record_number").notNull().unique(),
@@ -40,6 +53,16 @@ export const insertUserSchema = createInsertSchema(users).pick({
   role: z.enum(["admin", "supervisor", "user"]).default("user"),
 });
 
+export const insertPoliceStationSchema = createInsertSchema(policeStations).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPortSchema = createInsertSchema(ports).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertRecordSchema = createInsertSchema(records).omit({
   id: true,
   recordNumber: true,
@@ -51,5 +74,9 @@ export const insertRecordSchema = createInsertSchema(records).omit({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type InsertPoliceStation = z.infer<typeof insertPoliceStationSchema>;
+export type PoliceStation = typeof policeStations.$inferSelect;
+export type InsertPort = z.infer<typeof insertPortSchema>;
+export type Port = typeof ports.$inferSelect;
 export type InsertRecord = z.infer<typeof insertRecordSchema>;
 export type Record = typeof records.$inferSelect;

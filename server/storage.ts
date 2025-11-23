@@ -1,4 +1,10 @@
-import { users, records, type User, type InsertUser, type Record, type InsertRecord } from "@shared/schema";
+import { 
+  users, records, policeStations, ports,
+  type User, type InsertUser, 
+  type Record, type InsertRecord,
+  type PoliceStation, type InsertPoliceStation,
+  type Port, type InsertPort
+} from "@shared/schema";
 import { db } from "./db";
 import { eq, and, like, gte, lte, or } from "drizzle-orm";
 
@@ -10,6 +16,20 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, data: Partial<InsertUser>): Promise<User | undefined>;
   deleteUser(id: string): Promise<boolean>;
+
+  // Police Station methods
+  getPoliceStations(): Promise<PoliceStation[]>;
+  getPoliceStationById(id: number): Promise<PoliceStation | undefined>;
+  createPoliceStation(station: InsertPoliceStation): Promise<PoliceStation>;
+  updatePoliceStation(id: number, station: Partial<InsertPoliceStation>): Promise<PoliceStation | undefined>;
+  deletePoliceStation(id: number): Promise<boolean>;
+
+  // Port methods
+  getPorts(): Promise<Port[]>;
+  getPortById(id: number): Promise<Port | undefined>;
+  createPort(port: InsertPort): Promise<Port>;
+  updatePort(id: number, port: Partial<InsertPort>): Promise<Port | undefined>;
+  deletePort(id: number): Promise<boolean>;
 
   // Record methods
   getRecords(): Promise<Record[]>;
@@ -70,6 +90,70 @@ export class DatabaseStorage implements IStorage {
 
   async deleteUser(id: string): Promise<boolean> {
     const result = await db.delete(users).where(eq(users.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Police Station methods
+  async getPoliceStations(): Promise<PoliceStation[]> {
+    return await db.select().from(policeStations).orderBy(policeStations.name);
+  }
+
+  async getPoliceStationById(id: number): Promise<PoliceStation | undefined> {
+    const [station] = await db.select().from(policeStations).where(eq(policeStations.id, id));
+    return station || undefined;
+  }
+
+  async createPoliceStation(insertStation: InsertPoliceStation): Promise<PoliceStation> {
+    const [station] = await db
+      .insert(policeStations)
+      .values(insertStation)
+      .returning();
+    return station;
+  }
+
+  async updatePoliceStation(id: number, data: Partial<InsertPoliceStation>): Promise<PoliceStation | undefined> {
+    const [station] = await db
+      .update(policeStations)
+      .set(data)
+      .where(eq(policeStations.id, id))
+      .returning();
+    return station || undefined;
+  }
+
+  async deletePoliceStation(id: number): Promise<boolean> {
+    const result = await db.delete(policeStations).where(eq(policeStations.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Port methods
+  async getPorts(): Promise<Port[]> {
+    return await db.select().from(ports).orderBy(ports.name);
+  }
+
+  async getPortById(id: number): Promise<Port | undefined> {
+    const [port] = await db.select().from(ports).where(eq(ports.id, id));
+    return port || undefined;
+  }
+
+  async createPort(insertPort: InsertPort): Promise<Port> {
+    const [port] = await db
+      .insert(ports)
+      .values(insertPort)
+      .returning();
+    return port;
+  }
+
+  async updatePort(id: number, data: Partial<InsertPort>): Promise<Port | undefined> {
+    const [port] = await db
+      .update(ports)
+      .set(data)
+      .where(eq(ports.id, id))
+      .returning();
+    return port || undefined;
+  }
+
+  async deletePort(id: number): Promise<boolean> {
+    const result = await db.delete(ports).where(eq(ports.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
