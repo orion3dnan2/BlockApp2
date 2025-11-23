@@ -1,7 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { seedDatabase } from "./seeds";
 import path from "path";
 
 const app = express();
@@ -84,19 +83,6 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Database seeding disabled - data will be entered manually by admin
-  // To enable seeding temporarily: set ENABLE_SEEDING=true in .env
-  if (process.env.ENABLE_SEEDING === "true") {
-    try {
-      const seedTimeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Seed timeout")), 5000)
-      );
-      await Promise.race([seedDatabase(), seedTimeout]);
-    } catch (error) {
-      console.warn("⚠️  Database seeding skipped:", (error as Error).message);
-    }
-  }
-
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
