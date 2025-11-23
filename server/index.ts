@@ -84,15 +84,15 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Run database seeding only if explicitly enabled (prevents startup delays in production)
-  if (process.env.ENABLE_SEEDING === "true" || process.env.NODE_ENV === "development") {
+  // Database seeding disabled - data will be entered manually by admin
+  // To enable seeding temporarily: set ENABLE_SEEDING=true in .env
+  if (process.env.ENABLE_SEEDING === "true") {
     try {
       const seedTimeout = new Promise((_, reject) => 
         setTimeout(() => reject(new Error("Seed timeout")), 5000)
       );
       await Promise.race([seedDatabase(), seedTimeout]);
     } catch (error) {
-      // Non-blocking - if seeding fails, continue anyway
       console.warn("⚠️  Database seeding skipped:", (error as Error).message);
     }
   }
