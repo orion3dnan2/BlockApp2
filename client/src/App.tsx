@@ -42,7 +42,9 @@ function Router() {
       </Route>
       <Route path="/blocks/dashboard">
         <ProtectedLayout>
-          <Dashboard />
+          <PermissionProtectedRoute permission="dashboard">
+            <Dashboard />
+          </PermissionProtectedRoute>
         </ProtectedLayout>
       </Route>
       <Route path="/blocks/search">
@@ -68,7 +70,9 @@ function Router() {
       </Route>
       <Route path="/blocks/settings">
         <ProtectedLayout>
-          <SettingsPage />
+          <PermissionProtectedRoute anyOfPermissions={["settings_users", "settings_stations", "settings_ports"]}>
+            <SettingsPage />
+          </PermissionProtectedRoute>
         </ProtectedLayout>
       </Route>
       <Route path="/blocks/import">

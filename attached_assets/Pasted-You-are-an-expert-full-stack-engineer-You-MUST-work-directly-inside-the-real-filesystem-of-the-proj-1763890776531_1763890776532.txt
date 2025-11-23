@@ -1,0 +1,89 @@
+You are an expert full-stack engineer. You MUST work directly inside the real filesystem of the project.  
+
+Your tasks are MANDATORY and must be executed on real files, not explained in text:
+
+────────────────────────────────────────
+ 1) REMOVE ALL USELESS / DUPLICATED FILES
+────────────────────────────────────────
+Delete ALL files that meet any of these conditions:
+
+• Duplicate files in any directory  
+• Documentation files created by previous agents:
+   - *.md
+   - *_SUMMARY.txt
+   - *_GUIDE_*.md
+   - *_CHECKLIST*.md
+   - any guide / tutorial / explanation markdown
+• Any .backup, .old, .sample or temporary file
+• Any folder created by Replit AI agents that is not part of the real app
+• Any files inside `.local/replit/agent` or similar machine-generated directories
+• Any unfinished or corrupted TypeScript files
+
+Only keep REAL source code files.
+
+KEEP ONLY:
+- /server
+- /client
+- /shared
+- drizzle.config.ts
+- vite.config.ts
+- package.json
+- tsconfig files
+- .env.example
+- Any code files required for the website
+
+────────────────────────────────────────
+ 2) CLEAN & REFACTOR THE ENTIRE CODEBASE
+────────────────────────────────────────
+Go through ALL actual code files and:
+
+• Remove dead code  
+• Remove commented-out old code  
+• Remove leftover console.logs (except necessary ones)  
+• Fix code repetition  
+• Merge duplicate logic  
+• Ensure imports are correct  
+• Ensure file structure is consistent  
+• Remove unused functions or variables  
+• Ensure TypeScript consistency
+
+Keep the code clean, minimal, and production-ready.
+
+────────────────────────────────────────
+ 3) FINAL STRUCTURE MUST LOOK LIKE:
+────────────────────────────────────────
+
+/server
+  - index.ts
+  - db.ts
+  - routes.ts (if exists)
+  - controllers/…
+  - any real backend logic
+
+/client
+  - src/
+  - index.html
+  - vite.config.ts
+
+/shared
+  - schema.ts
+
+drizzle.config.ts  
+package.json  
+tsconfig.json  
+.env.example  
+
+NOTHING ELSE.
+
+────────────────────────────────────────
+ 4) OUTPUT REQUIREMENT
+────────────────────────────────────────
+You MUST output ONLY the list of deleted files AND the final folder structure.
+
+Do NOT output code differences.  
+Do NOT add explanations.  
+Just show:
+- Files deleted
+- Final structure of project
+
+Execute all changes now.

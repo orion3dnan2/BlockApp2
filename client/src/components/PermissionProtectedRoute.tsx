@@ -8,13 +8,15 @@ import type { Permission } from "@shared/schema";
 
 interface PermissionProtectedRouteProps {
   children: ReactNode;
-  permission: Permission;
+  permission?: Permission;
+  anyOfPermissions?: Permission[];
   fallback?: ReactNode;
 }
 
 export default function PermissionProtectedRoute({
   children,
   permission,
+  anyOfPermissions,
   fallback,
 }: PermissionProtectedRouteProps) {
   const { user, hasPermission } = useAuth();
@@ -24,7 +26,17 @@ export default function PermissionProtectedRoute({
     return null;
   }
 
-  if (!hasPermission(permission)) {
+  // Check if user has required permission(s)
+  let hasAccess = false;
+  if (permission) {
+    hasAccess = hasPermission(permission);
+  } else if (anyOfPermissions && anyOfPermissions.length > 0) {
+    hasAccess = anyOfPermissions.some(p => hasPermission(p));
+  } else {
+    hasAccess = true;
+  }
+
+  if (!hasAccess) {
     if (fallback) {
       return <>{fallback}</>;
     }

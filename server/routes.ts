@@ -2,7 +2,7 @@ import type { Express, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { hashPassword, verifyPassword, generateToken, authenticateToken, requireAdmin, requireAdminOrSupervisor, type AuthRequest } from "./auth";
-import { insertUserSchema, insertRecordSchema, insertPoliceStationSchema, insertPortSchema, type InsertUser } from "@shared/schema";
+import { insertUserSchema, insertRecordSchema, insertPoliceStationSchema, insertPortSchema, type InsertUser, availablePermissions, type Permission } from "@shared/schema";
 import { z } from "zod";
 
 // Wrapper to handle database timeouts and errors gracefully
@@ -153,7 +153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: z.string().min(6, "Password must be at least 6 characters").optional(),
         displayName: z.string().min(2, "Display name must be at least 2 characters").optional(),
         role: z.enum(["admin", "supervisor", "user"]).optional(),
-        permissions: z.array(z.string()).optional(),
+        permissions: z.array(z.enum(availablePermissions as [Permission, ...Permission[]])).optional(),
       });
       
       const validated = updateUserSchema.parse(req.body);
@@ -162,7 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (validated.displayName) updateData.displayName = validated.displayName;
       if (validated.username) updateData.username = validated.username;
       if (validated.role) updateData.role = validated.role;
-      if (validated.permissions) updateData.permissions = validated.permissions as any;
+      if (validated.permissions !== undefined) updateData.permissions = validated.permissions as Permission[];
       if (validated.password) {
         updateData.password = await hashPassword(validated.password);
       }

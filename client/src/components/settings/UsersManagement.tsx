@@ -71,7 +71,7 @@ const createUserSchema = z.object({
   password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل"),
   displayName: z.string().min(2, "الاسم الكامل يجب أن يكون حرفين على الأقل"),
   role: z.enum(["admin", "supervisor", "user"]).default("user"),
-  permissions: z.array(z.string()).default([]),
+  permissions: z.array(z.enum(availablePermissions as [Permission, ...Permission[]])).default([]),
 });
 
 const updateUserSchema = z.object({
@@ -79,7 +79,7 @@ const updateUserSchema = z.object({
   password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل").optional(),
   displayName: z.string().min(2, "الاسم الكامل يجب أن يكون حرفين على الأقل").optional(),
   role: z.enum(["admin", "supervisor", "user"]).optional(),
-  permissions: z.array(z.string()).optional(),
+  permissions: z.array(z.enum(availablePermissions as [Permission, ...Permission[]])).optional(),
 });
 
 type CreateUserFormData = z.infer<typeof createUserSchema>;
