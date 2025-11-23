@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -14,8 +14,10 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Search, Shield } from "lucide-react";
 import type { User } from "@shared/schema";
+import { availablePermissions, type Permission } from "@shared/schema";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Define user type without password
 type UserWithoutPassword = Omit<User, "password">;
@@ -48,12 +50,28 @@ const getRoleBadgeVariant = (role: string): "default" | "secondary" | "destructi
   }
 };
 
+// Helper function to translate permissions
+const getPermissionLabel = (permission: Permission): string => {
+  const labels: Record<Permission, string> = {
+    dashboard: "لوحة التحكم",
+    search: "البحث",
+    data_entry: "إدخال البيانات",
+    reports: "التقارير",
+    import: "الاستيراد",
+    settings_users: "إدارة المستخدمين",
+    settings_stations: "إدارة المخافر",
+    settings_ports: "إدارة المنافذ",
+  };
+  return labels[permission] || permission;
+};
+
 // Form validation schemas
 const createUserSchema = z.object({
   username: z.string().min(3, "اسم المستخدم يجب أن يكون 3 أحرف على الأقل"),
   password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل"),
   displayName: z.string().min(2, "الاسم الكامل يجب أن يكون حرفين على الأقل"),
   role: z.enum(["admin", "supervisor", "user"]).default("user"),
+  permissions: z.array(z.string()).default([]),
 });
 
 const updateUserSchema = z.object({
@@ -61,6 +79,7 @@ const updateUserSchema = z.object({
   password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل").optional(),
   displayName: z.string().min(2, "الاسم الكامل يجب أن يكون حرفين على الأقل").optional(),
   role: z.enum(["admin", "supervisor", "user"]).optional(),
+  permissions: z.array(z.string()).optional(),
 });
 
 type CreateUserFormData = z.infer<typeof createUserSchema>;
@@ -86,6 +105,7 @@ export default function UsersPage() {
       password: "",
       displayName: "",
       role: "user",
+      permissions: [],
     },
   });
 
@@ -97,6 +117,7 @@ export default function UsersPage() {
       password: "",
       displayName: "",
       role: "user",
+      permissions: [],
     },
   });
 
@@ -195,6 +216,7 @@ export default function UsersPage() {
       displayName: user.displayName,
       password: "",
       role: user.role as "admin" | "supervisor" | "user",
+      permissions: (user.permissions as string[]) || [],
     });
     setIsDialogOpen(true);
   };
@@ -216,6 +238,13 @@ export default function UsersPage() {
     if (data.displayName && data.displayName !== editingUser.displayName) cleanData.displayName = data.displayName;
     if (data.password) cleanData.password = data.password;
     if (data.role && data.role !== editingUser.role) cleanData.role = data.role;
+    
+    // Check if permissions changed
+    const currentPermissions = (editingUser.permissions as string[]) || [];
+    const newPermissions = data.permissions || [];
+    if (JSON.stringify(currentPermissions.sort()) !== JSON.stringify(newPermissions.sort())) {
+      cleanData.permissions = newPermissions;
+    }
 
     if (Object.keys(cleanData).length === 0) {
       toast({
@@ -441,6 +470,44 @@ export default function UsersPage() {
                   )}
                 />
 
+                <FormField
+                  control={updateForm.control}
+                  name="permissions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel data-testid="label-permissions">الصلاحيات المتاحة</FormLabel>
+                      <FormDescription>
+                        اختر الصفحات والوظائف المتاحة لهذا المستخدم
+                      </FormDescription>
+                      <div className="grid grid-cols-2 gap-3 mt-2">
+                        {availablePermissions.map((permission) => (
+                          <div key={permission} className="flex items-center space-x-2 space-x-reverse">
+                            <Checkbox
+                              id={`update-permission-${permission}`}
+                              checked={field.value?.includes(permission)}
+                              onCheckedChange={(checked) => {
+                                const current = field.value || [];
+                                const newValue = checked
+                                  ? [...current, permission]
+                                  : current.filter((p) => p !== permission);
+                                field.onChange(newValue);
+                              }}
+                              data-testid={`checkbox-permission-${permission}`}
+                            />
+                            <label
+                              htmlFor={`update-permission-${permission}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                            >
+                              {getPermissionLabel(permission)}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} data-testid="button-cancel">
                     إلغاء
@@ -514,6 +581,44 @@ export default function UsersPage() {
                           <SelectItem value="user" data-testid="option-user">مستخدم</SelectItem>
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={createForm.control}
+                  name="permissions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel data-testid="label-permissions">الصلاحيات المتاحة</FormLabel>
+                      <FormDescription>
+                        اختر الصفحات والوظائف المتاحة لهذا المستخدم
+                      </FormDescription>
+                      <div className="grid grid-cols-2 gap-3 mt-2">
+                        {availablePermissions.map((permission) => (
+                          <div key={permission} className="flex items-center space-x-2 space-x-reverse">
+                            <Checkbox
+                              id={`create-permission-${permission}`}
+                              checked={field.value?.includes(permission)}
+                              onCheckedChange={(checked) => {
+                                const current = field.value || [];
+                                const newValue = checked
+                                  ? [...current, permission]
+                                  : current.filter((p) => p !== permission);
+                                field.onChange(newValue);
+                              }}
+                              data-testid={`checkbox-permission-${permission}`}
+                            />
+                            <label
+                              htmlFor={`create-permission-${permission}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                            >
+                              {getPermissionLabel(permission)}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
