@@ -41,15 +41,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: hashedPassword,
         displayName,
         role: "user",
+        permissions: [],
       });
 
-      const token = generateToken(user.id, user.username, user.displayName, user.role as "admin" | "supervisor" | "user");
+      const token = generateToken(user.id, user.username, user.displayName, user.role as "admin" | "supervisor" | "user", user.permissions || []);
       res.json({
         user: {
           id: user.id,
           username: user.username,
           displayName: user.displayName,
           role: user.role,
+          permissions: user.permissions || [],
         },
         token,
       });
@@ -79,13 +81,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      const token = generateToken(user.id, user.username, user.displayName, user.role as "admin" | "supervisor" | "user");
+      const token = generateToken(user.id, user.username, user.displayName, user.role as "admin" | "supervisor" | "user", user.permissions || []);
       res.json({
         user: {
           id: user.id,
           username: user.username,
           displayName: user.displayName,
           role: user.role,
+          permissions: user.permissions || [],
         },
         token,
       });
@@ -129,6 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: hashedPassword,
         displayName: validated.displayName,
         role: validated.role,
+        permissions: validated.permissions || [],
       });
 
       const { password: _, ...userWithoutPassword } = user;
@@ -149,6 +153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: z.string().min(6, "Password must be at least 6 characters").optional(),
         displayName: z.string().min(2, "Display name must be at least 2 characters").optional(),
         role: z.enum(["admin", "supervisor", "user"]).optional(),
+        permissions: z.array(z.string()).optional(),
       });
       
       const validated = updateUserSchema.parse(req.body);
@@ -157,6 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (validated.displayName) updateData.displayName = validated.displayName;
       if (validated.username) updateData.username = validated.username;
       if (validated.role) updateData.role = validated.role;
+      if (validated.permissions) updateData.permissions = validated.permissions as any;
       if (validated.password) {
         updateData.password = await hashPassword(validated.password);
       }
