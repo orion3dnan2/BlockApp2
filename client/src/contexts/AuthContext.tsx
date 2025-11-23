@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { ApiClient } from "@/lib/api";
 import { useLocation } from "wouter";
+import type { Permission } from "@shared/schema";
 
 export type UserRole = "admin" | "supervisor" | "user";
 
@@ -9,6 +10,7 @@ export interface User {
   username: string;
   displayName: string;
   role: UserRole;
+  permissions: Permission[];
 }
 
 interface AuthContextType {
@@ -17,6 +19,7 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, password: string, displayName: string) => Promise<void>;
   logout: () => void;
+  hasPermission: (permission: Permission) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -73,8 +76,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLocation("/login");
   };
 
+  const hasPermission = (permission: Permission): boolean => {
+    if (!user) return false;
+    if (user.role === "admin") return true;
+    return user.permissions.includes(permission);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout, hasPermission }}>
       {children}
     </AuthContext.Provider>
   );

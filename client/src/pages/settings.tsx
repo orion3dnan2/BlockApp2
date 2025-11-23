@@ -10,26 +10,33 @@ import PoliceStationsManagement from "@/components/settings/PoliceStationsManage
 import PortsManagement from "@/components/settings/PortsManagement";
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [, setLocation] = useLocation();
-  const isAdmin = user?.role === "admin";
   
-  // Determine allowed default tab based on role
-  const allowedDefaultTab = isAdmin ? "users" : "police-stations";
+  const canManageUsers = hasPermission("settings_users");
+  const canManageStations = hasPermission("settings_stations");
+  const canManagePorts = hasPermission("settings_ports");
+  
+  // Determine allowed default tab based on permissions
+  const allowedDefaultTab = canManageUsers ? "users" : canManageStations ? "police-stations" : "ports";
   const [activeTab, setActiveTab] = useState(allowedDefaultTab);
   
-  // Guard against non-admin trying to access users tab
+  // Guard against trying to access tabs without permission
   useEffect(() => {
-    if (!isAdmin && activeTab === "users") {
-      setActiveTab("police-stations");
+    if (activeTab === "users" && !canManageUsers) {
+      setActiveTab(canManageStations ? "police-stations" : "ports");
+    } else if (activeTab === "police-stations" && !canManageStations) {
+      setActiveTab(canManagePorts ? "ports" : canManageUsers ? "users" : "ports");
+    } else if (activeTab === "ports" && !canManagePorts) {
+      setActiveTab(canManageUsers ? "users" : "police-stations");
     }
-  }, [isAdmin, activeTab]);
+  }, [activeTab, canManageUsers, canManageStations, canManagePorts]);
   
   const handleTabChange = (value: string) => {
-    // Prevent non-admins from accessing users tab
-    if (!isAdmin && value === "users") {
-      return;
-    }
+    // Prevent accessing tabs without permission
+    if (value === "users" && !canManageUsers) return;
+    if (value === "police-stations" && !canManageStations) return;
+    if (value === "ports" && !canManagePorts) return;
     setActiveTab(value);
   };
   
@@ -56,36 +63,44 @@ export default function SettingsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-3' : 'grid-cols-2'} mb-8`}>
-          {isAdmin && (
+        <TabsList className="grid w-full mb-8" style={{ gridTemplateColumns: `repeat(${[canManageUsers, canManageStations, canManagePorts].filter(Boolean).length}, minmax(0, 1fr))` }}>
+          {canManageUsers && (
             <TabsTrigger value="users" className="gap-2" data-testid="tab-users">
               <Users className="h-4 w-4" />
               المستخدمين
             </TabsTrigger>
           )}
-          <TabsTrigger value="police-stations" className="gap-2" data-testid="tab-police-stations">
-            <Building2 className="h-4 w-4" />
-            المخافر
-          </TabsTrigger>
-          <TabsTrigger value="ports" className="gap-2" data-testid="tab-ports">
-            <Ship className="h-4 w-4" />
-            المنافذ
-          </TabsTrigger>
+          {canManageStations && (
+            <TabsTrigger value="police-stations" className="gap-2" data-testid="tab-police-stations">
+              <Building2 className="h-4 w-4" />
+              المخافر
+            </TabsTrigger>
+          )}
+          {canManagePorts && (
+            <TabsTrigger value="ports" className="gap-2" data-testid="tab-ports">
+              <Ship className="h-4 w-4" />
+              المنافذ
+            </TabsTrigger>
+          )}
         </TabsList>
 
-        {isAdmin && (
+        {canManageUsers && (
           <TabsContent value="users">
             <UsersManagement />
           </TabsContent>
         )}
 
-        <TabsContent value="police-stations">
-          <PoliceStationsManagement />
-        </TabsContent>
+        {canManageStations && (
+          <TabsContent value="police-stations">
+            <PoliceStationsManagement />
+          </TabsContent>
+        )}
 
-        <TabsContent value="ports">
-          <PortsManagement />
-        </TabsContent>
+        {canManagePorts && (
+          <TabsContent value="ports">
+            <PortsManagement />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

@@ -1,17 +1,18 @@
 import { FileText, Search, Users, Database, FileInput, Settings } from "lucide-react";
 import { useLocation } from "wouter";
-import { useAuth, type UserRole } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
+import type { Permission } from "@shared/schema";
 
 interface Module {
   title: string;
   icon: any;
   path: string;
-  allowedRoles?: UserRole[];
+  requiredPermission?: Permission;
 }
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [, setLocation] = useLocation();
 
   const allModules: Module[] = [
@@ -19,39 +20,39 @@ export default function Dashboard() {
       title: "تقارير", 
       icon: FileText, 
       path: "/blocks/reports",
-      allowedRoles: ["admin", "supervisor", "user"],
+      requiredPermission: "reports",
     },
     { 
       title: "استعلام", 
       icon: Search, 
       path: "/blocks/search",
-      allowedRoles: ["admin", "supervisor", "user"],
+      requiredPermission: "search",
     },
     { 
       title: "إدخال البيانات", 
       icon: FileInput, 
       path: "/blocks/data-entry",
-      allowedRoles: ["admin", "supervisor"],
+      requiredPermission: "data_entry",
     },
     { 
       title: "الإعدادات", 
       icon: Settings, 
       path: "/blocks/settings",
-      allowedRoles: ["admin", "supervisor"],
     },
     { 
       title: "استيراد", 
       icon: Database, 
       path: "/blocks/import",
-      allowedRoles: ["admin", "supervisor"],
+      requiredPermission: "import",
     },
   ];
 
-  // Filter modules based on user role
+  // Filter modules based on user permissions
   const modules = user 
-    ? allModules.filter(module => 
-        !module.allowedRoles || module.allowedRoles.includes(user.role)
-      )
+    ? allModules.filter(module => {
+        if (!module.requiredPermission) return true;
+        return hasPermission(module.requiredPermission);
+      })
     : allModules;
 
   return (

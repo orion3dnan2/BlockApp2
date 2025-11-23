@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import RoleProtectedRoute from "@/components/RoleProtectedRoute";
+import PermissionProtectedRoute from "@/components/PermissionProtectedRoute";
 import Header, { Footer } from "@/components/Header";
 import HomePage from "@/pages/home";
 import Dashboard from "@/pages/dashboard";
@@ -47,33 +47,35 @@ function Router() {
       </Route>
       <Route path="/blocks/search">
         <ProtectedLayout>
-          <SearchPage />
+          <PermissionProtectedRoute permission="search">
+            <SearchPage />
+          </PermissionProtectedRoute>
         </ProtectedLayout>
       </Route>
       <Route path="/blocks/data-entry">
         <ProtectedLayout>
-          <RoleProtectedRoute allowedRoles={["admin", "supervisor"]}>
+          <PermissionProtectedRoute permission="data_entry">
             <DataEntryPage />
-          </RoleProtectedRoute>
+          </PermissionProtectedRoute>
         </ProtectedLayout>
       </Route>
       <Route path="/blocks/reports">
         <ProtectedLayout>
-          <ReportsPage />
+          <PermissionProtectedRoute permission="reports">
+            <ReportsPage />
+          </PermissionProtectedRoute>
         </ProtectedLayout>
       </Route>
       <Route path="/blocks/settings">
         <ProtectedLayout>
-          <RoleProtectedRoute allowedRoles={["admin", "supervisor"]}>
-            <SettingsPage />
-          </RoleProtectedRoute>
+          <SettingsPage />
         </ProtectedLayout>
       </Route>
       <Route path="/blocks/import">
         <ProtectedLayout>
-          <RoleProtectedRoute allowedRoles={["admin", "supervisor"]}>
+          <PermissionProtectedRoute permission="import">
             <ImportPage />
-          </RoleProtectedRoute>
+          </PermissionProtectedRoute>
         </ProtectedLayout>
       </Route>
       <Route component={NotFound} />
