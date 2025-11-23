@@ -73,11 +73,15 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Run database seeding
+  // Run database seeding (non-blocking - don't fail if it times out)
   try {
-    await seedDatabase();
+    const seedTimeout = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("Seed timeout")), 5000)
+    );
+    await Promise.race([seedDatabase(), seedTimeout]);
   } catch (error) {
-    console.error("Failed to seed database:", error);
+    // Non-blocking - if seeding fails, continue anyway
+    console.warn("⚠️  Database seeding skipped:", (error as Error).message);
   }
 
   const server = await registerRoutes(app);

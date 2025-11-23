@@ -1,9 +1,28 @@
-import type { Express } from "express";
+import type { Express, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { hashPassword, verifyPassword, generateToken, authenticateToken, requireAdmin, requireAdminOrSupervisor, type AuthRequest } from "./auth";
 import { insertUserSchema, insertRecordSchema, insertPoliceStationSchema, insertPortSchema, type InsertUser } from "@shared/schema";
 import { z } from "zod";
+
+// Wrapper to handle database timeouts and errors gracefully
+async function withDatabaseTimeout<T>(
+  operation: () => Promise<T>,
+  timeoutMs: number = 8000,
+  defaultValue?: T
+): Promise<T> {
+  try {
+    const timeoutPromise = new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error("Database query timeout")), timeoutMs)
+    );
+    return await Promise.race([operation(), timeoutPromise]);
+  } catch (error) {
+    if (defaultValue !== undefined) {
+      return defaultValue;
+    }
+    throw error;
+  }
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -82,7 +101,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Users management routes
   app.get("/api/users", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const allUsers = await storage.getUsers();
+      const allUsers = await withDatabaseTimeout(
+        () => storage.getUsers(),
+        8000,
+        [] // Default to empty array if timeout
+      );
       // Remove password from response
       const usersWithoutPassword = allUsers.map(({ password, ...user }) => user);
       res.json(usersWithoutPassword);
@@ -178,7 +201,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Police Stations routes
   app.get("/api/police-stations", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const stations = await storage.getPoliceStations();
+      const stations = await withDatabaseTimeout(
+        () => storage.getPoliceStations(),
+        8000,
+        [] // Default to empty array if timeout
+      );
       res.json(stations);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -231,7 +258,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Ports routes
   app.get("/api/ports", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const ports = await storage.getPorts();
+      const ports = await withDatabaseTimeout(
+        () => storage.getPorts(),
+        8000,
+        [] // Default to empty array if timeout
+      );
       res.json(ports);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
@@ -284,7 +315,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Records routes
   app.get("/api/records", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const records = await storage.getRecords();
+      const records = await withDatabaseTimeout(
+        () => storage.getRecords(),
+        8000,
+        [] // Default to empty array if timeout
+      );
       res.json(records);
     } catch (error) {
       res.status(500).json({ message: "Server error" });
