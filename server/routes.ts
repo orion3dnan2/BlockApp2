@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { hashPassword, verifyPassword, generateToken, authenticateToken, requireAdmin, requireAdminOrSupervisor, type AuthRequest } from "./auth";
-import { insertUserSchema, insertRecordSchema, type InsertUser } from "@shared/schema";
+import { insertUserSchema, insertRecordSchema, insertPoliceStationSchema, insertPortSchema, type InsertUser } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -168,6 +168,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const success = await storage.deleteUser(req.params.id);
       if (!success) {
         return res.status(404).json({ message: "User not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  // Police Stations routes
+  app.get("/api/police-stations", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const stations = await storage.getPoliceStations();
+      res.json(stations);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.post("/api/police-stations", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const validated = insertPoliceStationSchema.parse(req.body);
+      const station = await storage.createPoliceStation(validated);
+      res.status(201).json(station);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.put("/api/police-stations/:id", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validated = insertPoliceStationSchema.partial().parse(req.body);
+      const station = await storage.updatePoliceStation(id, validated);
+      if (!station) {
+        return res.status(404).json({ message: "Police station not found" });
+      }
+      res.json(station);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.delete("/api/police-stations/:id", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deletePoliceStation(id);
+      if (!success) {
+        return res.status(404).json({ message: "Police station not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  // Ports routes
+  app.get("/api/ports", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const ports = await storage.getPorts();
+      res.json(ports);
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.post("/api/ports", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const validated = insertPortSchema.parse(req.body);
+      const port = await storage.createPort(validated);
+      res.status(201).json(port);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.put("/api/ports/:id", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validated = insertPortSchema.partial().parse(req.body);
+      const port = await storage.updatePort(id, validated);
+      if (!port) {
+        return res.status(404).json({ message: "Port not found" });
+      }
+      res.json(port);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.delete("/api/ports/:id", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deletePort(id);
+      if (!success) {
+        return res.status(404).json({ message: "Port not found" });
       }
       res.status(204).send();
     } catch (error) {
