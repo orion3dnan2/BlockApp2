@@ -5,6 +5,31 @@ import { seedDatabase } from "./seeds";
 
 const app = express();
 
+// Configure CORS and trust APP_URL
+const appUrl = process.env.APP_URL || "http://localhost:5000";
+const corsOrigins = [appUrl, "http://localhost:5000", "http://127.0.0.1:5000"];
+
+// Trust proxy (for reverse proxy setups like Apache)
+app.set("trust proxy", true);
+
+// CORS middleware
+app.use((req, res, next) => {
+  const origin = req.headers.origin || "";
+  // Allow requests from configured origins
+  if (corsOrigins.some(allowed => origin === allowed || !origin)) {
+    res.header("Access-Control-Allow-Origin", origin || appUrl);
+    res.header("Access-Control-Allow-Credentials", "true");
+  }
+  res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE");
+  res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
+  
+  // Handle preflight requests
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 declare module 'http' {
   interface IncomingMessage {
     rawBody: unknown
