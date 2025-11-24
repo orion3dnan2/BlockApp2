@@ -3,7 +3,8 @@ import { useLocation } from "wouter";
 import { useAuth, type UserRole } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, ShieldCheck, ClipboardList, Search, PieChart, Settings, Database } from "lucide-react";
+import { FileText, ShieldCheck, ClipboardList, Search, PieChart, Settings, Database, LayoutGrid } from "lucide-react";
+import GovLogo from "@/components/GovLogo";
 
 interface ModuleCard {
   title: string;
@@ -63,7 +64,6 @@ export default function HomePage() {
     },
   ];
 
-  // Filter cards based on user role
   const blockSystemCards = user 
     ? allBlockSystemCards.filter(card => 
         !card.allowedRoles || card.allowedRoles.includes(user.role)
@@ -80,76 +80,81 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-gray-50 to-blue-100" dir="rtl">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8 text-center">
-          <div className="mb-4 flex items-center justify-center gap-3">
-            <ShieldCheck className="h-12 w-12 text-blue-600" />
-            <h1 className="text-4xl font-bold text-gray-900">
-              نظام إدارة الرقابة والتفتيش
-            </h1>
+    <div className="min-h-[calc(100vh-120px)] bg-gradient-to-br from-background via-muted/30 to-background" dir="rtl">
+      <div 
+        className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--primary)/0.05),transparent_70%)]"
+        style={{ top: '-5%' }}
+      />
+      
+      <div className="container relative mx-auto px-4 pt-6 pb-12">
+        <div className="mb-6 text-center">
+          <div className="mb-3 flex items-center justify-center gap-3">
+            <GovLogo className="h-14 w-14" />
           </div>
-          {user && (
-            <p className="text-lg text-gray-600">
-              مرحباً، <span className="font-semibold text-blue-700">{user.displayName}</span>
-            </p>
-          )}
+          <h1 className="mb-1 text-3xl font-bold text-foreground">
+            منصة إدارة الرقابة والتفتيش
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            النظام الإلكتروني الموحد للرقابة الحكومية
+          </p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" dir="rtl">
-          <TabsList className="mb-8 grid w-full grid-cols-2 gap-4" data-testid="tabs-list">
-            <TabsTrigger 
-              value="admin" 
-              className="text-lg"
-              data-testid="tab-admin"
-            >
-              نظام إداري
-            </TabsTrigger>
+          <TabsList className="mb-6 grid w-full max-w-md mx-auto grid-cols-2 gap-2 h-auto p-1 bg-muted/50" data-testid="tabs-list">
             <TabsTrigger 
               value="blocks" 
-              className="text-lg"
+              className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm"
               data-testid="tab-blocks"
             >
-              نظام البلوكات
+              <LayoutGrid className="h-4 w-4" strokeWidth={2} />
+              <span>نظام البلوكات</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="admin" 
+              className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold data-[state=active]:bg-card data-[state=active]:shadow-sm"
+              data-testid="tab-admin"
+            >
+              <FileText className="h-4 w-4" strokeWidth={2} />
+              <span>نظام إداري</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="admin" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {adminSystemCards.map((card) => (
+          <TabsContent value="blocks" className="mt-0">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {blockSystemCards.map((card) => (
                 <Card
                   key={card.title}
-                  className="group cursor-pointer transition-all hover:shadow-lg"
-                  onClick={() => card.path !== "#" && setLocation(card.path)}
+                  className="group cursor-pointer border-border/50 transition-all hover:border-primary/30 hover:shadow-md"
+                  onClick={() => setLocation(card.path)}
                   data-testid={`card-${card.title}`}
                 >
-                  <CardContent className="flex flex-col items-center justify-center p-8 text-center">
-                    <div className="mb-4 rounded-full bg-blue-100 p-6 transition-colors group-hover:bg-blue-200">
-                      <card.icon className="h-12 w-12 text-blue-600" />
+                  <CardContent className="flex flex-col items-center justify-center p-5 text-center">
+                    <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/15">
+                      <card.icon className="h-7 w-7 text-primary" strokeWidth={2} />
                     </div>
-                    <h3 className="mb-2 text-2xl font-bold text-gray-900">{card.title}</h3>
-                    <p className="text-sm text-gray-600">{card.description}</p>
+                    <h3 className="mb-1 text-lg font-bold text-foreground">{card.title}</h3>
+                    <p className="text-xs leading-relaxed text-muted-foreground">{card.description}</p>
                   </CardContent>
                 </Card>
               ))}
             </div>
           </TabsContent>
 
-          <TabsContent value="blocks" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {blockSystemCards.map((card) => (
+          <TabsContent value="admin" className="mt-0">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {adminSystemCards.map((card) => (
                 <Card
                   key={card.title}
-                  className="group cursor-pointer transition-all hover:shadow-lg"
-                  onClick={() => setLocation(card.path)}
+                  className="group cursor-pointer border-border/50 opacity-60 transition-all"
+                  onClick={() => card.path !== "#" && setLocation(card.path)}
                   data-testid={`card-${card.title}`}
                 >
-                  <CardContent className="flex flex-col items-center justify-center p-8 text-center">
-                    <div className="mb-4 rounded-full bg-blue-100 p-6 transition-colors group-hover:bg-blue-200">
-                      <card.icon className="h-12 w-12 text-blue-600" />
+                  <CardContent className="flex flex-col items-center justify-center p-5 text-center">
+                    <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-lg bg-muted/50">
+                      <card.icon className="h-7 w-7 text-muted-foreground" strokeWidth={2} />
                     </div>
-                    <h3 className="mb-2 text-2xl font-bold text-gray-900">{card.title}</h3>
-                    <p className="text-sm text-gray-600">{card.description}</p>
+                    <h3 className="mb-1 text-lg font-bold text-foreground">{card.title}</h3>
+                    <p className="text-xs leading-relaxed text-muted-foreground">{card.description}</p>
                   </CardContent>
                 </Card>
               ))}
