@@ -1,0 +1,131 @@
+You are working on an existing full-stack TypeScript project (Vite + React frontend, Node/Express backend, Drizzle ORM).
+Your tasks are to fully fix and prepare the system to run reliably on Windows and to use a local XAMPP MySQL database instead of Neon/PostgreSQL.
+Follow these requirements carefully and implement everything directly in the codebase.
+
+0) General Rules
+
+Do NOT create a new project. Modify the current one only.
+
+Remove duplicated/unused files and dead code, but keep all real features.
+
+Ensure the project builds and runs locally without errors.
+
+Use clean, consistent TypeScript and folder structure.
+
+1) Make the Project Windows-Compatible
+
+Update package.json scripts so they work on Windows CMD/PowerShell:
+
+Install and use cross-env for NODE_ENV.
+
+Ensure dev, build, and start run without platform-specific issues.
+
+Check any filesystem paths or shell commands that might break on Windows and fix them.
+
+Add a clear README_WINDOWS.md with exact steps to run on Windows.
+
+2) Replace PostgreSQL/Neon with XAMPP MySQL
+
+The current backend uses Neon/PostgreSQL (@neondatabase/serverless, drizzle-orm/pg-core).
+You must migrate it to MySQL, compatible with XAMPP.
+
+2.1 Update Dependencies
+
+Remove Neon/Postgres dependencies if not needed.
+
+Add MySQL stack:
+
+mysql2
+
+drizzle-orm/mysql2
+
+drizzle-orm/mysql-core
+
+Ensure TypeScript types compile.
+
+2.2 Rewrite DB Connection
+
+Replace server/db.ts to use MySQL pool connection:
+
+Read DATABASE_URL from .env
+
+Use mysql2/promise
+
+Export db using Drizzle MySQL driver.
+
+Example target (adapt to project paths):
+
+import { drizzle } from "drizzle-orm/mysql2";
+import mysql from "mysql2/promise";
+import * as schema from "@shared/schema";
+
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) throw new Error("DATABASE_URL is required");
+
+const pool = mysql.createPool(databaseUrl);
+export const db = drizzle(pool, { schema, mode: "default" });
+
+2.3 Convert Schema from pg-core to mysql-core
+
+Update shared/schema.ts:
+
+Replace pgTable with mysqlTable
+
+Replace serial, timestamp, jsonb, uuid, etc. with correct MySQL equivalents
+
+Keep the same table names and columns/relations.
+
+Ensure all queries in backend still match the schema.
+
+2.4 Fix Drizzle Config + Migrations
+
+Update drizzle.config.ts for MySQL properly.
+
+Recreate migrations if needed, then ensure:
+
+npm run db:push (or equivalent) works for MySQL.
+
+If schema changes require data type adjustments, do them safely.
+
+3) Environment Files
+
+Create .env.example with correct MySQL/XAMPP values:
+
+DATABASE_URL="mysql://root:@localhost:3306/<db_name>"
+PORT=5000
+NODE_ENV=development
+
+
+Ensure backend fails fast with helpful errors if .env missing.
+
+4) Validate End-to-End Functionality
+
+Run and confirm:
+
+backend starts with MySQL
+
+frontend connects to backend
+
+core features work (CRUD, auth if exists, dashboards, etc.)
+
+Fix any runtime errors uncovered by the switch.
+
+5) Deliverables
+
+When finished, output:
+
+A short summary of what you changed.
+
+List of files modified.
+
+Exact Windows + XAMPP run steps:
+
+create DB in phpMyAdmin
+
+run migrations/push
+
+start backend
+
+start frontend
+
+Make sure the final project runs on Windows with XAMPP MySQL without any manual code edits.

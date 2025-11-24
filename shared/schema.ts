@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, serial, json } from "drizzle-orm/pg-core";
+import { mysqlTable, text, varchar, timestamp, int, json } from "drizzle-orm/mysql-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -16,31 +16,31 @@ export const availablePermissions = [
 
 export type Permission = typeof availablePermissions[number];
 
-export const users = pgTable("users", {
-  id: varchar("id", { length: 36 }).primaryKey().default(sql`gen_random_uuid()`),
+export const users = mysqlTable("users", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   displayName: text("display_name").notNull(),
   role: text("role").notNull().default("user"),
-  permissions: json("permissions").$type<Permission[]>().default(sql`'[]'::json`),
+  permissions: json("permissions").$type<Permission[]>(),
 });
 
-export const policeStations = pgTable("police_stations", {
-  id: serial("id").primaryKey(),
+export const policeStations = mysqlTable("police_stations", {
+  id: int("id").primaryKey().autoincrement(),
   name: text("name").notNull().unique(),
   governorate: text("governorate").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const ports = pgTable("ports", {
-  id: serial("id").primaryKey(),
+export const ports = mysqlTable("ports", {
+  id: int("id").primaryKey().autoincrement(),
   name: text("name").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const records = pgTable("records", {
-  id: varchar("id", { length: 36 }).primaryKey().default(sql`gen_random_uuid()`),
-  recordNumber: serial("record_number").notNull().unique(),
+export const records = mysqlTable("records", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  recordNumber: int("record_number").notNull().unique().autoincrement(),
   outgoingNumber: text("outgoing_number").notNull(),
   militaryNumber: text("military_number"),
   actionType: text("action_type"),
