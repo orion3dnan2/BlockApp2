@@ -101,17 +101,24 @@ Open your browser and navigate to:
 - **Frontend:** http://localhost:5000
 - **Backend API:** http://localhost:5000/api
 
-## Step 6: Create Initial Admin User (Optional)
+## Step 6: Create Test Accounts (Recommended)
 
-If the application requires an admin user, you can create one using phpMyAdmin:
+The application includes a seed script to create test accounts automatically:
 
-1. Open phpMyAdmin
-2. Select the `blocksystem` database
-3. Click on the `users` table
-4. Click "Insert" tab
-5. Fill in the fields (password should be hashed with bcrypt)
+```bash
+npx tsx server/seed.ts
+```
 
-Alternatively, if the application has a registration feature, use that to create your first user.
+This will create:
+- **Admin Account** (username: `admin`, password: `admin123`) - Full access
+- **Supervisor Account** (username: `supervisor`, password: `super123`) - Data entry & reports
+- **User Account** (username: `user`, password: `user123`) - View only
+
+It will also create sample police stations and ports for testing.
+
+**Note:** The seed script only runs once. If users already exist, it will skip creation.
+
+For detailed information about test accounts, see `ACCOUNTS_AR.md`.
 
 ## Troubleshooting
 
