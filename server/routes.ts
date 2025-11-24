@@ -153,7 +153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: z.string().min(6, "Password must be at least 6 characters").optional(),
         displayName: z.string().min(2, "Display name must be at least 2 characters").optional(),
         role: z.enum(["admin", "supervisor", "user"]).optional(),
-        permissions: z.array(z.enum(availablePermissions as [Permission, ...Permission[]])).optional(),
+        permissions: z.array(z.enum([...availablePermissions] as [Permission, ...Permission[]])).optional(),
       });
       
       const validated = updateUserSchema.parse(req.body);
