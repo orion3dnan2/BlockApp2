@@ -1,22 +1,38 @@
 # نظام إدارة الرقابة والتفتيش - Design Guidelines
 
 ## Design Approach
-**Governmental Enterprise System** inspired by Material Design principles and modern administrative portals. Professional, formal aesthetic emphasizing trust, authority, and clarity for Arabic government operations.
+**Governmental Enterprise System** with professional, formal aesthetic emphasizing trust, authority, and clarity for Arabic government operations. The design follows strict governmental standards with Navy Blue (#0A2342) and Royal Blue (#1F4EAD) as primary colors, creating a trustworthy and official appearance.
+
+## Color System
+**Primary Colors:**
+- Navy Blue (#0A2342 / HSL 216 80% 10%): Primary backgrounds, headers
+- Royal Blue (#1F4EAD / HSL 220 60% 40%): Interactive elements, accents
+- Light Background (#F7FAFC / HSL 208 30% 98%): Page backgrounds
+- White (#FFFFFF): Card backgrounds
+
+**Semantic Colors:**
+- Foreground: HSL 215 25% 15% (Dark navy text)
+- Muted: HSL 210 20% 94% (Subtle backgrounds)
+- Border: HSL 210 20% 88% (Light borders)
+
+**Shadow System:**
+Subtle shadows using Navy Blue with very low opacity (3-8%) for professional government look.
 
 ## Typography System (RTL)
-**Primary Font**: Cairo (Google Fonts)
-- Page Titles: 2xl/3xl (32-48px), Bold (700)
-- Section Headers: xl/2xl (24-32px), SemiBold (600)
-- Card Headers: lg (18px), SemiBold (600)
+**Primary Font**: Cairo, Tajawal (Arabic official fonts)
+- Page Titles: 3xl (30px), Bold (700)
+- Section Headers: xl (20px), SemiBold (600)
+- Card Headers: lg (18px), Bold (700)
 - Body Text: base (16px), Regular (400)
-- Small Text/Labels: sm (14px), Medium (500)
+- Small Text/Labels: xs-sm (12-14px), Medium (500)
 
 ## Layout System
-**Spacing Units**: Tailwind 2, 4, 6, 8, 12, 16 for consistency
-- Section Padding: py-12 md:py-16
-- Card Padding: p-6
-- Element Gaps: gap-4, gap-6, gap-8
-- Container: max-w-7xl with px-4 md:px-8
+**Spacing Units**: Tailwind 2, 3, 4, 5, 6 for tighter, more compact government design
+- Section Padding: py-6 md:py-8 (reduced by ~30%)
+- Card Padding: p-5 (reduced by ~15% from standard p-6)
+- Element Gaps: gap-3, gap-4 (tighter spacing)
+- Container: max-w-7xl with px-4
+- Content positioned 5% higher from top for better space distribution
 
 ## Core Components
 
