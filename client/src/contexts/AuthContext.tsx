@@ -71,9 +71,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    console.log("Logout function called - removing token and redirecting");
     localStorage.removeItem("auth_token");
     setUser(null);
     setLocation("/login");
+    // Force reload to ensure clean state
+    setTimeout(() => {
+      window.location.href = "/login";
+    }, 100);
   };
 
   const hasPermission = (permission: Permission): boolean => {
