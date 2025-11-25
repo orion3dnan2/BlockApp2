@@ -4,7 +4,7 @@
 
 Block System is a comprehensive Arabic-language management system for tracking and managing reports and restrictions (البلاغات والقيود). The application provides a full-featured platform for data entry, search, reporting, and administrative management with role-based access control and granular permissions.
 
-The system is built as a full-stack application with a React frontend and Express backend, using MySQL for data persistence. It supports multiple user roles (admin, supervisor, user) with customizable permissions for different modules and features.
+The system is built as a full-stack application with a React frontend and Express backend, using PostgreSQL for data persistence. It supports multiple user roles (admin, supervisor, user) with customizable permissions for different modules and features.
 
 ## User Preferences
 
@@ -77,9 +77,9 @@ Preferred communication style: Simple, everyday language.
 ### Data Storage
 
 **Database:**
-- MySQL as the primary database
+- PostgreSQL as the primary database (migrated from MySQL for Replit compatibility)
 - Drizzle ORM for type-safe database queries and migrations
-- Connection pooling via mysql2/promise
+- Connection pooling via pg (node-postgres)
 
 **Schema Design:**
 - `users` table: Stores user credentials, roles, and permissions (JSON array)
@@ -93,7 +93,7 @@ Preferred communication style: Simple, everyday language.
 - Type safety enforced throughout the stack via TypeScript
 
 **Key Design Decisions:**
-- MySQL chosen for reliability and widespread hosting support
+- PostgreSQL chosen for Replit native integration and reliability
 - Drizzle ORM selected for its lightweight nature and excellent TypeScript support
 - JSON field used for permissions array to allow flexible permission management without schema changes
 - Shared schema in `shared/schema.ts` ensures consistency across client and server
@@ -129,7 +129,7 @@ Users can have custom permission arrays regardless of role, providing fine-grain
 - express: Web server framework
 - react & react-dom: UI library
 - vite: Build tool and dev server
-- drizzle-orm & mysql2: Database ORM and driver
+- drizzle-orm & pg: Database ORM and PostgreSQL driver
 
 **UI & Styling:**
 - @radix-ui/*: Accessible component primitives
