@@ -37,9 +37,12 @@ export default function Header() {
             </div>
             
             <Button
-              variant="ghost"
+              variant="destructive"
               size="sm"
-              onClick={logout}
+              onClick={() => {
+                console.log("تم الضغط على زر الخروج");
+                logout();
+              }}
               className="gap-2"
               data-testid="button-logout"
             >
