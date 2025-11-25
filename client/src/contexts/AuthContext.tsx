@@ -1,9 +1,9 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { ApiClient } from "@/lib/api";
 import { useLocation } from "wouter";
-import type { Permission } from "@shared/schema";
+import type { Permission, Role } from "@shared/schema";
 
-export type UserRole = "admin" | "supervisor" | "user";
+export type UserRole = Role;
 
 export interface User {
   id: string;

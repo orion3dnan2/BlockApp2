@@ -72,10 +72,10 @@ export default function HomePage() {
 
   const adminSystemCards = [
     { 
-      title: "قريباً", 
+      title: "النظام الإداري", 
       icon: FileText, 
-      path: "#",
-      description: "النظام الإداري قيد التطوير",
+      path: "/admin",
+      description: "نظام متكامل لإدارة الموارد البشرية وسير المعاملات",
     },
   ];
 
@@ -145,13 +145,13 @@ export default function HomePage() {
               {adminSystemCards.map((card) => (
                 <Card
                   key={card.title}
-                  className="group cursor-pointer border-border/50 opacity-60 transition-all"
-                  onClick={() => card.path !== "#" && setLocation(card.path)}
+                  className="group cursor-pointer border-border/50 transition-all hover:border-primary/30 hover:shadow-md"
+                  onClick={() => setLocation(card.path)}
                   data-testid={`card-${card.title}`}
                 >
                   <CardContent className="flex flex-col items-center justify-center p-5 text-center">
-                    <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-lg bg-muted/50">
-                      <card.icon className="h-7 w-7 text-muted-foreground" strokeWidth={2} />
+                    <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/15">
+                      <card.icon className="h-7 w-7 text-primary" strokeWidth={2} />
                     </div>
                     <h3 className="mb-1 text-lg font-bold text-foreground">{card.title}</h3>
                     <p className="text-xs leading-relaxed text-muted-foreground">{card.description}</p>

@@ -14,6 +14,8 @@ import DataEntryPage from "@/pages/data-entry";
 import ReportsPage from "@/pages/reports";
 import SettingsPage from "@/pages/settings";
 import ImportPage from "@/pages/import";
+import AdminSystemPage from "@/pages/admin-system";
+import AdminDashboard from "@/pages/admin/dashboard";
 import LoginPage from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -80,6 +82,16 @@ function Router() {
           <PermissionProtectedRoute permission="import">
             <ImportPage />
           </PermissionProtectedRoute>
+        </ProtectedLayout>
+      </Route>
+      <Route path="/admin">
+        <ProtectedLayout>
+          <AdminSystemPage />
+        </ProtectedLayout>
+      </Route>
+      <Route path="/admin/dashboard">
+        <ProtectedLayout>
+          <AdminDashboard />
         </ProtectedLayout>
       </Route>
       <Route component={NotFound} />
